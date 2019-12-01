@@ -67,7 +67,7 @@ private fun downloadInput(day: Int, year: Int): List<String> {
 }
 
 private fun getSessionCookie() =
-    System.getenv("aoc-cookie") ?: object {}.javaClass.getResource("session-cookie").readText()
+    System.getenv("AOC_COOKIE") ?: object {}.javaClass.getResource("session-cookie").readText()
 
 private fun <T> readInput(day: Int, year: Int, mapper: (String) -> T): List<T>? {
     val file = File(fileNameFor(day, year))
