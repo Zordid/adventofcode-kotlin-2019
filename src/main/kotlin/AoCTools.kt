@@ -5,8 +5,8 @@ import java.util.*
 abstract class Day<T>(day: Int, year: Int, processor: (String) -> T) {
     val input = getInput(day, year, processor)
 
-    open fun part1(): Any? = null
-    open fun part2(): Any? = null
+    open fun part1(): Any? = input
+    open fun part2(): Any? = input
 }
 
 fun asStrings(s: String) = s

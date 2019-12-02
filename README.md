@@ -20,3 +20,14 @@ My favorite approach, as usual, is a functional way to state:
 
 Part 2 requires a little recursion to keep track of how much more fuel is needed
 to carry the fuel you just calculated itself. Straight forward.
+
+### Day 2: 1202 Program Alarm
+
+Exceptionally early this year we hit the very first simple CPU emulation! It's a
+ship computer running *Intcode* programs. Well essentially all CPUs run code that
+is nothing more than numbers.
+
+The trick here - and sadly something that cost me several minutes this morning - 
+was to really make sure the indirect memory addressing works flawlessly.
+Other than that, I spent some time this afternoon to refactor and build a ```ShipComputer```
+class, ready for extensions in the upcoming puzzles!
