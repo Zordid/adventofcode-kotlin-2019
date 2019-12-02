@@ -1,27 +1,65 @@
-import kotlin.system.exitProcess
+typealias Instruction = (Int, List<Int>) -> Int
+
+class ShipComputer(
+    private val program: List<Int>,
+    private val initializer: MutableList<Int>.() -> Unit = {}
+) {
+
+    lateinit var memory: MutableList<Int>
+    var halt = false
+    var ip = 0
+
+    private val instructions = mapOf<Int, Instruction>(
+        1 to { ip, args -> memory[args[2]] = memory[args[0]] + memory[args[1]]; ip + 4 },
+        2 to { ip, args -> memory[args[2]] = memory[args[0]] * memory[args[1]]; ip + 4 },
+        99 to { _, _ -> halt = true; 0 }
+    )
+
+    init {
+        reset()
+    }
+
+    fun reset() {
+        memory = program.toMutableList()
+        memory.initializer()
+        halt = false
+        ip = 0
+    }
+
+    fun run() {
+        while (!halt) {
+            val opcode = memory[ip]
+            val args = memory.slice(ip + 1..ip + 3)
+            val instruction = instructions[opcode] ?: error("Unknown opcode $opcode!")
+            ip = instruction(ip, args)
+        }
+    }
+
+}
 
 class Day02 : Day<String>(2, 2019, ::asStrings) {
 
+    private val program = input[0].split(",").map { it.toInt() }
 
-    override fun part1(): Any? {
-        val program = input[0].split(",").map { it.toInt() }.toMutableList()
-        println(program)
-        program[1] = 12
-        program[2] = 2
+    override fun part1(): Int {
+        val computer = ShipComputer(program) {
+            this[1] = 12
+            this[2] = 2
+        }
 
-        return run(program)
+        computer.run()
+        return computer.memory[0]
     }
 
-    override fun part2(): Any? {
-        val program = input[0].split(",").map { it.toInt() }
-
+    override fun part2(): Int {
         for (noun in 0..99) {
             for (verb in 0..99) {
-                val p = program.toMutableList()
-                p[1] = noun
-                p[2] = verb
-                if (run(p) == 19690720) {
-                    println("match: noun=$noun, verb=$verb")
+                val computer = ShipComputer(program) {
+                    this[1] = noun
+                    this[2] = verb
+                }
+                computer.run()
+                if (computer.memory[0] == 19690720) {
                     return 100 * noun + verb
                 }
             }
@@ -29,58 +67,9 @@ class Day02 : Day<String>(2, 2019, ::asStrings) {
         return -1
     }
 
-    fun run(program: MutableList<Int>): Int {
-
-        fun add(pos: Int) {
-            val a = program[program[pos]]
-            val b = program[program[pos + 1]]
-            val dest = program[pos + 2]
-            val result = a + b
-            //println("ADD $a + $b = $result written in $dest")
-            program[dest] = result
-        }
-
-        fun mult(pos: Int) {
-            val a = program[program[pos]]
-            val b = program[program[pos + 1]]
-            val dest = program[pos + 2]
-            val result = a * b
-            //println("MULT $a * $b = $result written in $dest")
-            program[dest] = result
-        }
-
-        var ip = 0
-        var opcode = program[ip]
-
-        while (true) {
-            //println("processing $opcode @ $ip")
-            ip += when (opcode) {
-                1 -> {
-                    add(ip + 1)
-                    4
-                }
-                2 -> {
-                    mult(ip + 1)
-                    4
-                }
-                99 -> {
-                    //println("Exit")
-                    return program[0]
-                }
-                else -> error("WOP")
-            }
-            opcode = program[ip]
-        }
-    }
-
 }
 
 fun main() {
-//    val program = mutableListOf(1,9,10,3,2,3,11,0,99,30,40,50)
-//    println(program)
-//    println(Day02().run(program))
-//    println(program)
-//    exitProcess(1)
     with(Day02()) {
         println(part1())
         println(part2())

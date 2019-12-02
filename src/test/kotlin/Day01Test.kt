@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-internal class Day01KtTest {
+internal class Day01Test {
 
     private val day01 = Day01()
 
