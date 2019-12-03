@@ -18,3 +18,17 @@ fun Point.down(steps: Int = 1) = x to y + steps
 
 fun <T> Iterable<T>.asEndlessSequence() = sequence { while (true) yieldAll(this@asEndlessSequence) }
 
+fun <R, T> Sequence<T>.scan(seed: R, transform: (a: R, b: T) -> R): Sequence<R> = object : Sequence<R> {
+    override fun iterator(): Iterator<R> = object : Iterator<R> {
+        val it = this@scan.iterator()
+        var last: R = seed
+        var first = true
+
+        override fun next(): R {
+            if (first) first = false else last = transform(last, it.next())
+            return last
+        }
+
+        override fun hasNext(): Boolean = it.hasNext()
+    }
+}
