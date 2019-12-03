@@ -2,11 +2,17 @@ import java.io.File
 import java.net.URL
 import java.util.*
 
-abstract class Day<T>(day: Int, year: Int, processor: (String) -> T) {
+abstract class Day<T>(val day: Int, val year: Int, processor: (String) -> T) {
     val input = getInput(day, year, processor)
 
-    open fun part1(): Any? = input
-    open fun part2(): Any? = input
+    open fun part1(): Any? = null
+    open fun part2(): Any? = null
+
+    fun run() {
+        println("=== AoC $year, day $day ===")
+        println("Solution 1: ${part1()}")
+        println("Solution 2: ${part2()}")
+    }
 }
 
 fun asStrings(s: String) = s

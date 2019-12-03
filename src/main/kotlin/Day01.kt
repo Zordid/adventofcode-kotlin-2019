@@ -16,8 +16,5 @@ class Day01 : Day<Int>(1, 2019, ::asInts) {
 }
 
 fun main() {
-    with(Day01()) {
-        println(part1())
-        println(part2())
-    }
+    Day01().run()
 }
