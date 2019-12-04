@@ -59,10 +59,10 @@ class Day04 : Day<String>(4, 2019, ::asStrings) {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // And now, let's go absolutely crazy with performance. Julius showed: without reoccuring
+    // And now, let's go absolutely crazy with performance. Julius showed: without recurring
     // memory allocation, this beast gets really, really fast! Another x10 factor!
 
-    inline fun checkCodeRange(predicate: (CharArray) -> Boolean): Int {
+    inline fun checkCodeInRange(predicate: (CharArray) -> Boolean): Int {
         val current = range.first.toString().toCharArray()
         val limit = range.last.toString().toCharArray()
 
@@ -106,16 +106,16 @@ class Day04 : Day<String>(4, 2019, ::asStrings) {
     }
 
     fun part1VeryOptimized() =
-        checkCodeRange {
+        checkCodeInRange {
             for (i in 1..5) {
                 if (it[i - 1] == it[i])
-                    return@checkCodeRange true
+                    return@checkCodeInRange true
             }
             false
         }
 
     fun part2VeryOptimized() =
-        checkCodeRange {
+        checkCodeInRange {
             var digitCount = 1
             for (i in 1..5) {
                 if (it[i] == it[i - 1])
@@ -149,6 +149,5 @@ fun main() {
     println("took ${measureAverageMillis(100) { day.part2() }} ms per slow call")
     println("took ${measureAverageMillis(1000) { day.part2Optimized() }} ms per fast call")
     println("took ${measureAverageMillis(10000) { day.part2VeryOptimized() }} ms per VERY fast call")
-
 
 }
