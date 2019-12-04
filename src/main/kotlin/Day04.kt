@@ -1,27 +1,19 @@
 class Day04 : Day<String>(4, 2019, ::asStrings) {
 
-    val range = input.first().split("-").map { it.toInt() }
+    val range = input.first().split("-").map { it.toInt() }.let { it[0]..it[1] }
 
-    val low = range[0]
-    val high = range[1]
+    fun String.inPairs() = asSequence().zipWithNext()
 
-    fun String.twoAreTheSame() = asSequence().zipWithNext().any { (a, b) -> a == b }
-    fun String.neverDecrease() = asSequence().zipWithNext().none { (a, b) -> a > b }
+    fun String.neverDecrease() = inPairs().none { (a, b) -> a > b }
+    fun String.twoAreTheSame() = inPairs().any { (a, b) -> a == b }
+    fun String.twoAreTheSameButNotLarger() = inPairs().any { (a, b) -> a == b && !contains("$a$a$a") }
 
-    fun String.twoAreTheSameButNotLarger() = asSequence().zipWithNext().any { (a,b) -> a==b && !contains("$a$a$a")}
+    fun Int.validPart1() = toString().let { it.neverDecrease() && it.twoAreTheSame() }
+    fun Int.validPart2() = toString().let { it.neverDecrease() && it.twoAreTheSameButNotLarger() }
 
-    fun Int.valid() = toString().let { it.twoAreTheSame() && it.neverDecrease() }
-    fun Int.valid2(): Boolean {
-        return toString().let { it.twoAreTheSameButNotLarger() && it.neverDecrease() }
-    }
+    override fun part1() = range.count { it.validPart1() }
 
-    override fun part1(): Any? {
-        return (low..high).count { it.valid() }
-    }
-
-    override fun part2(): Any? {
-        return (low..high).count { it.valid2() }
-    }
+    override fun part2() = range.count { it.validPart2() }
 
 }
 
