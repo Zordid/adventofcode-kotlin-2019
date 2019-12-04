@@ -13,4 +13,24 @@ internal class Day04Test {
         assertEquals(677, Day04().part2())
     }
 
+    @Test
+    fun testPart1Optimized() {
+        assertEquals(1048, Day04().part1Optimized())
+    }
+
+    @Test
+    fun testPart2Optimized() {
+        assertEquals(677, Day04().part2Optimized())
+    }
+
+    @Test
+    fun testPart1VeryOptimized() {
+        assertEquals(1048, Day04().part1VeryOptimized())
+    }
+
+    @Test
+    fun testPart2VeryOptimized() {
+        assertEquals(677, Day04().part2VeryOptimized())
+    }
+
 }

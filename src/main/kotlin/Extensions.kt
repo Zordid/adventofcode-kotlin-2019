@@ -1,4 +1,5 @@
 import kotlin.math.absoluteValue
+import kotlin.system.measureTimeMillis
 
 typealias Point = Pair<Int, Int>
 
@@ -32,3 +33,6 @@ fun <R, T> Sequence<T>.scan(seed: R, transform: (a: R, b: T) -> R): Sequence<R> 
         override fun hasNext(): Boolean = it.hasNext()
     }
 }
+
+fun measureAverageMillis(count: Int, block: (Int) -> Unit) =
+    (measureTimeMillis { repeat(count, block) } - measureTimeMillis { repeat(count) {} }).toDouble() / count
