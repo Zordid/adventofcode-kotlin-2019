@@ -15,6 +15,8 @@ abstract class Day<T>(val day: Int, val year: Int, processor: (String) -> T) {
     }
 }
 
+fun List<String>.justInts(separator: String = ",") = first().split(separator).map { it.toInt() }
+
 fun asStrings(s: String) = s
 fun asInts(s: String) = s.toInt()
 fun asLongs(s: String) = s.toLong()

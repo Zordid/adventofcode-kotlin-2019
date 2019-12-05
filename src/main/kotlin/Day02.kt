@@ -1,49 +1,10 @@
-typealias Instruction = (Int, List<Int>) -> Int
-
-class ShipComputer(
-    private val program: List<Int>,
-    private val defaultInitializer: MutableList<Int>.() -> Unit = {}
-) {
-
-    lateinit var memory: MutableList<Int>
-
-    var halt = false
-    var ip = 0
-    private val instructions = mapOf<Int, Instruction>(
-        1 to { ip, args -> memory[args[2]] = memory[args[0]] + memory[args[1]]; ip + 4 },
-        2 to { ip, args -> memory[args[2]] = memory[args[0]] * memory[args[1]]; ip + 4 },
-        99 to { _, _ -> halt = true; 0 }
-    )
-
-    init {
-        reset()
-    }
-
-    fun reset(initializer: MutableList<Int>.() -> Unit = {}) {
-        memory = program.toMutableList()
-        memory.defaultInitializer()
-        memory.initializer()
-        halt = false
-        ip = 0
-    }
-
-    fun run() {
-        while (!halt) {
-            val opcode = memory[ip]
-            val args = memory.slice(ip + 1..ip + 3)
-            val instruction = instructions[opcode] ?: error("Unknown opcode $opcode!")
-            ip = instruction(ip, args)
-        }
-    }
-
-}
-
 class Day02 : Day<String>(2, 2019, ::asStrings) {
 
     private val program = input[0].split(",").map { it.toInt() }
 
     override fun part1(): Int {
-        val computer = ShipComputer(program) {
+        val computer = ShipComputer(program)
+        computer.reset {
             set(1, 12, 2)
         }
 
