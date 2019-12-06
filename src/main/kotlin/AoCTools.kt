@@ -2,8 +2,14 @@ import java.io.File
 import java.net.URL
 import java.util.*
 
-abstract class Day<T>(val day: Int, val year: Int, processor: (String) -> T) {
-    val input = getInput(day, year, processor)
+abstract class Day<T>(
+    private val day: Int = today,
+    private val year: Int = thisYear,
+    processor: (String) -> T,
+    testData: List<String>? = null
+) {
+
+    val input: List<T> = testData?.map(processor) ?: getInput(day, year, processor)
 
     open fun part1(): Any? = null
     open fun part2(): Any? = null
