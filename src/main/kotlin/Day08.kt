@@ -10,7 +10,7 @@ class Day08(
     height: Int = 6
 ) : Day<String>(8, 2019, ::asStrings, testData) {
 
-    private val layers = input[0].asSequence()
+    val layers = input[0].asSequence()
         .windowed(width * height, step = width * height).map { it.toList() }.toList()
 
     override fun part1(): Int {
