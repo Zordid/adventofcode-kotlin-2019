@@ -8,6 +8,17 @@ I am doing these challenges for the third year in a row now and I am totally
 addicted to them. If you are into programming, into logic, maybe also a little 
 bit into competition, this one is for you as well!
 
+### Overview
+|Day |Title                             |Remarks
+|---:|----------------------------------|----|
+|  1 |The Tyranny of the Rocket Equation|As usual, solvable with Excel in a matter of minutes. :)|
+|  2 |1202 Program Alarm                |Our **IntProgram** running ship computer comes to life with a few instructions!|
+|  3 |Crossed Wires                     |Tangled wires with directional instructions need to be parsed for crossings. The first puzzle that demands some visualization!|
+|  4 |Secure Container                  |Definition of a valid password and your task to scan a range of numbers for just the valid ones. Can be used to create ultra optimized solutions! |
+|  5 |Sunny with a Chance of Asteroids  |Extending day 2's rudimentary ship computer once more to include new instructions for in/out, immediate mode and comparision & jumps|
+|  6 |Universal Orbit Map               |Definitions of objects in space and their orbits make you order them up and find optimized orbital paths.|
+|  7 |Amplification Circuit             |Taking the ship computer to the next level by hooking some of them up together. Now in/out has to be connected somehow.|
+
 ### Day 1: The Tyranny of the Rocket Equation
 
 As usual, we get into things with a little entry-level coding warm-up. The first
@@ -16,7 +27,7 @@ is the default in integer arithmetic, so no special treatment is needed.
 My favorite approach, as usual, is a functional way to state:
 
 "Sum up all elements after applying this function":
-```moduleMasses.sumBy { it.fuelForMass }```
+`moduleMasses.sumBy { it.fuelForMass }`
 
 Part 2 requires a little recursion to keep track of how much more fuel is needed
 to carry the fuel you just calculated itself. Straight forward.
@@ -24,12 +35,12 @@ to carry the fuel you just calculated itself. Straight forward.
 ### Day 2: 1202 Program Alarm
 
 Exceptionally early this year we hit the very first simple CPU emulation! It's a
-ship computer running *Intcode* programs. Well essentially all CPUs run code that
+ship computer running **Intcode** programs. Well essentially all CPUs run code that
 is nothing more than numbers.
 
 The trick here - and sadly something that cost me several minutes this morning - 
 was to really make sure the indirect memory addressing works flawlessly.
-Other than that, I spent some time this afternoon to refactor and build a ```ShipComputer```
+Other than that, I spent some time this afternoon to refactor and build a `ShipComputer`
 class, ready for extensions in the upcoming puzzles!
 
 ### Day 3: Crossed Wires
@@ -45,13 +56,13 @@ approach this is to first trace each and every point that is ever touched by a
 wire and then do an intersection of the two sets of points to find only the common
 points.
 
-```val commonPoints = wirePoints[0].intersect(wirePoints[1])```
+`val commonPoints = wirePoints[0].intersect(wirePoints[1])`
 
 To further get the required single point, Kotlin again comes with easy to use 
-functions on arbitrary data: ```minBy``` is your friend!
+functions on arbitrary data: `minBy` is your friend!
 
-Furthermore, this puzzle led me to typealias a tuple (```Pair``` in Kotlin) to a 
-```Point``` along with helpful extension properties and functions tailored for it like:
+Furthermore, this puzzle led me to typealias a tuple (`Pair` in Kotlin) to a 
+`Point` along with helpful extension properties and functions tailored for it like:
 
 ```
 val Point.x: Int

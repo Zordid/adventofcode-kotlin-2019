@@ -34,5 +34,3 @@ fun <R, T> Sequence<T>.scan(seed: R, transform: (a: R, b: T) -> R): Sequence<R> 
     }
 }
 
-fun measureAverageMillis(count: Int, block: (Int) -> Unit) =
-    (measureTimeMillis { repeat(count, block) } - measureTimeMillis { repeat(count) {} }).toDouble() / count

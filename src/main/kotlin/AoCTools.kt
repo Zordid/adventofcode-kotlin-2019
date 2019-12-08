@@ -1,6 +1,7 @@
 import java.io.File
 import java.net.URL
 import java.util.*
+import kotlin.system.measureTimeMillis
 
 abstract class Day<T>(
     private val day: Int = today,
@@ -16,8 +17,8 @@ abstract class Day<T>(
 
     fun run() {
         println("=== AoC $year, day $day ===")
-        println("Solution 1: ${part1()}")
-        println("Solution 2: ${part2()}")
+        println("Solution 1:\n${part1()}")
+        println("Solution 2:\n${part2()}")
     }
 }
 
@@ -99,7 +100,5 @@ private fun storeInput(day: Int, year: Int, puzzle: List<String>) {
 fun pathNameForYear(year: Int) = "puzzles/$year"
 fun fileNameFor(day: Int, year: Int) = "${pathNameForYear(year)}/day${"%02d".format(day)}.txt"
 
-fun main() {
-    val x = getInput() { it }
-    println(x)
-}
+fun measureAverageMillis(count: Int, block: (Int) -> Unit) =
+    (measureTimeMillis { repeat(count, block) } - measureTimeMillis { repeat(count) {} }).toDouble() / count
