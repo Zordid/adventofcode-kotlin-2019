@@ -18,6 +18,7 @@ bit into competition, this one is for you as well!
 |  5 |Sunny with a Chance of Asteroids  |Extending day 2's rudimentary ship computer once more to include new instructions for in/out, immediate mode and comparision & jumps|
 |  6 |Universal Orbit Map               |Definitions of objects in space and their orbits make you order them up and find optimized orbital paths.|
 |  7 |Amplification Circuit             |Taking the ship computer to the next level by hooking some of them up together. Now in/out has to be connected somehow.|
+|  8 |Space Image Format                |A sequence of digits represent a layered monochrome image that has to be decrypted and displayed. Fun.|
 
 ### Day 1: The Tyranny of the Rocket Equation
 
