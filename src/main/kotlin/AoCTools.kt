@@ -23,6 +23,7 @@ abstract class Day<T>(
 }
 
 fun List<String>.justInts(separator: String = ",") = first().split(separator).map { it.toInt() }
+fun List<String>.justLongs(separator: String = ",") = first().split(separator).map { it.toLong() }
 
 fun asStrings(s: String) = s
 fun asInts(s: String) = s.toInt()
@@ -53,7 +54,7 @@ fun getInputAsStrings(day: Int = today, year: Int = thisYear): List<String> =
     getInput(day, year) { it }
 
 fun getInputAsInts(day: Int = today, year: Int = thisYear): List<Int> =
-    getInput(day, year) { it.toInt() }
+    getInput(day, year) { it }.let { if (it.size == 1) it[0].split(",").map { it.toInt() } else it.map { it.toInt() } }
 
 fun <T> getInput(day: Int = today, year: Int = thisYear, mapper: (String) -> T): List<T> {
     val cached = readInput(day, year, mapper)

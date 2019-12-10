@@ -1,71 +1,105 @@
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
 
-typealias InstructionFunc = suspend (ip: Int, parameters: List<Int>) -> Int?
+typealias Data = Long
+
+fun String.toData() = toLong()
+
+typealias InstructionFunc = suspend (ip: Data, parameters: List<Data>) -> Data?
 
 interface Debugger {
-    fun preFetchHook(ip: Int)
-    fun preParameterLoadHook(ip: Int, opcode: Int)
-    fun preExecutionHook(ip: Int, instruction: Instruction, modes: String, parameters: List<Int>)
-    fun postExecutionHook(ip: Int)
+    fun preFetchHook(ip: Data)
+    fun preParameterLoadHook(ip: Data, opcode: Data)
+    fun preExecutionHook(ip: Data, instruction: Instruction, modes: String, parameters: List<Data>)
+    fun postExecutionHook(ip: Data)
 }
 
-class Instruction(val opcode: Int, val name: String, val argDefinition: String, val operation: InstructionFunc) {
+class Instruction(val opcode: Data, val name: String, val argDefinition: String, val operation: InstructionFunc) {
     val parameters: Int
         get() = argDefinition.length
 }
 
+suspend fun defaultConsoleInput(): Data {
+    print("INPUT: ")
+    return readLine()!!.toData()
+}
+
+suspend fun defaultConsoleOutput(v: Data) {
+    println("OUTPUT: $v")
+}
+
 class ShipComputer(
-    private val program: List<Int> = emptyList(),
-    private val input: suspend () -> Int = { print("INPUT: "); readLine()!!.toInt() },
-    private val output: suspend (Int) -> Unit = { println("OUTPUT: $it") }
+    private val program: List<Data> = emptyList(),
+    private val input: suspend () -> Data = ::defaultConsoleInput,
+    private val output: suspend (Data) -> Unit = ::defaultConsoleOutput
 ) {
 
     internal val instructionSet = listOf(
-        Instruction(1, "ADD", "OOA") { ip, (op1, op2, addr) -> memory[addr] = op1 + op2; ip + 4 },
-        Instruction(2, "MUL", "OOA") { ip, (op1, op2, addr) -> memory[addr] = op1 * op2; ip + 4 },
-        Instruction(3, "IN", "A") { ip, (addr) -> memory[addr] = input(); ip + 2 },
+        Instruction(1, "ADD", "OOA") { ip, (op1, op2, addr) -> writeMem(addr, op1 + op2); ip + 4 },
+        Instruction(2, "MUL", "OOA") { ip, (op1, op2, addr) -> writeMem(addr, op1 * op2); ip + 4 },
+        Instruction(3, "IN", "A") { ip, (addr) -> writeMem(addr, input()); ip + 2 },
         Instruction(4, "OUT", "O") { ip, (op) -> output(op); ip + 2 },
-        Instruction(5, "JNZ", "OO") { ip, (op, dest) -> if (op != 0) dest else ip + 3 },
-        Instruction(6, "JZ", "OO") { ip, (op, dest) -> if (op == 0) dest else ip + 3 },
-        Instruction(7, "LT", "OOA") { ip, (op1, op2, addr) -> memory[addr] = if (op1 < op2) 1 else 0; ip + 4 },
-        Instruction(8, "EQ", "OOA") { ip, (op1, op2, addr) -> memory[addr] = if (op1 == op2) 1 else 0; ip + 4 },
+        Instruction(5, "JNZ", "OO") { ip, (op, dest) -> if (op != 0L) dest else ip + 3 },
+        Instruction(6, "JZ", "OO") { ip, (op, dest) -> if (op == 0L) dest else ip + 3 },
+        Instruction(7, "LT", "OOA") { ip, (op1, op2, addr) -> writeMem(addr, if (op1 < op2) 1 else 0); ip + 4 },
+        Instruction(8, "EQ", "OOA") { ip, (op1, op2, addr) -> writeMem(addr, if (op1 == op2) 1 else 0); ip + 4 },
+        Instruction(9, "SRB", "O") { ip, (op) -> rb += op; ip + 2 },
         Instruction(99, "HLT", "") { _, _ -> halt = true; null }
     )
 
     var debugger: Debugger? = null
 
-    var memory = mutableListOf<Int>()
-    var ip = 0
+    var memory = mutableListOf<Data>()
+    var ip = 0L
+    var rb = 0L
     var halt = false
 
     init {
         reset()
     }
 
-    fun reset(initializer: MutableList<Int>.() -> Unit = {}) {
+    fun reset(initializer: MutableList<Data>.() -> Unit = {}) {
         memory = program.toMutableList()
         memory.initializer()
         ip = 0
         halt = false
     }
 
-    private fun decodeInstruction(opcode: Int) =
+    private fun decodeInstruction(opcode: Data) =
         instructionSet.find { it.opcode == opcode % 100 }
 
-    private fun Instruction.decodeModes(opcode: Int) =
+    private fun Instruction.decodeModes(opcode: Data) =
         (opcode / 100).toString().reversed().padEnd(parameters, '0')
 
-    private fun Instruction.fetchParameters(address: Int): List<Int> =
-        argDefinition.indices.map { memory[address + it] }
+    private fun Instruction.fetchParameters(address: Data): List<Data> =
+        argDefinition.indices.map { readMem(address + it) }
 
-    private fun Instruction.resolvePositionalArguments(modes: String, parameters: List<Int>): List<Int> =
-        parameters.mapIndexed { n, p -> if (modes[n] == '0' && argDefinition[n] != 'A') memory[p] else p }
+    private fun Instruction.resolvePositionalArguments(modes: String, parameters: List<Data>): List<Data> =
+        parameters.mapIndexed { n, p ->
+            when (modes[n]) {
+                '0' -> if (argDefinition[n] == 'A') p else readMem(p)
+                '1' -> p
+                '2' -> if (argDefinition[n] == 'A') rb + p else readMem(rb + p)
+                else -> error("wrong mode $modes[n]")
+            }
+        }
+
+    fun readMem(address: Data): Data {
+        require(address >= 0)
+        while (address >= memory.size) memory.add(0)
+        return memory[address.toInt()]
+    }
+
+    fun writeMem(address: Data, value: Data) {
+        require(address >= 0)
+        while (address >= memory.size) memory.add(0)
+        memory[address.toInt()] = value
+    }
 
     suspend fun step(): Boolean {
         if (halt) return false
         debugger?.preFetchHook(ip)
-        val opcode = memory[ip]
+        val opcode = readMem(ip)
         val instruction = decodeInstruction(opcode) ?: error("Unknown instruction $opcode at $ip")
         debugger?.preParameterLoadHook(ip, opcode)
         val parameters = instruction.fetchParameters(ip + 1)
@@ -90,8 +124,8 @@ class ShipComputer(
 
 }
 
-suspend fun List<Int>.execute(
-    input: suspend () -> Int = { print("Your input: "); readLine()!!.toInt() },
-    output: suspend (Int) -> Unit = { println(it) }
+fun List<Data>.execute(
+    input: suspend () -> Data = ::defaultConsoleInput,
+    output: suspend (Data) -> Unit = ::defaultConsoleOutput
 ) =
-    ShipComputer(this, input, output).runAsync()
+    ShipComputer(this, input, output).run()

@@ -69,10 +69,10 @@ abstract class PixelGameEngine {
             defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
             isResizable = false
             pack()
-            size = Dimension(
-                screenWidth * pixelWidth + insets.left + insets.right,
-                screenHeight * pixelHeight + insets.top + insets.bottom
-            )
+            size = with(insets) {Dimension(
+                screenWidth * pixelWidth + left + right,
+                screenHeight * pixelHeight + top + bottom
+            )}
             panel.alignmentX = JComponent.CENTER_ALIGNMENT
             panel.alignmentY = JComponent.CENTER_ALIGNMENT
             add(panel)
@@ -213,19 +213,19 @@ abstract class PixelGameEngine {
     }
 
     @JvmOverloads
-    fun drawRect(x: Int, y: Int, width: Int, height: Int, color: Color = Color.WHITE) {
-        drawLine(x, y, x + width, y, color);
-        drawLine(x + width, y, x + width, y + height, color);
-        drawLine(x + width, y + height, x, y + height, color);
-        drawLine(x, y + height, x, y, color);
+    fun drawRect(x: Int, y: Int, width: Int, height: Int, color: Color = Color.WHITE, pattern: Long = 0xFFFFFFFF) {
+        drawLine(x, y, x + width - 1, y, color, pattern);
+        drawLine(x + width - 1, y, x + width - 1, y + height - 1, color, pattern);
+        drawLine(x + width - 1, y + height - 1, x, y + height - 1, color, pattern);
+        drawLine(x, y + height - 1, x, y, color, pattern);
     }
 
     @JvmOverloads
     fun fillRect(x: Int, y: Int, width: Int, height: Int, color: Color = Color.WHITE) {
         var x1 = x
         var y1 = y
-        var x2 = x + width
-        var y2 = y + height
+        var x2 = x + width - 1
+        var y2 = y + height - 1
 
         if (x1 < 0) x1 = 0
         if (x1 >= screenWidth) x1 = screenWidth

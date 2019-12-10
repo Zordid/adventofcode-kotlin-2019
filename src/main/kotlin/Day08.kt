@@ -11,7 +11,7 @@ class Day08(
 ) : Day<String>(8, 2019, ::asStrings, testData) {
 
     val layers = input[0].asSequence()
-        .windowed(width * height, step = width * height).map { it.toList() }.toList()
+        .chunked(width * height).map { it.toList() }.toList()
 
     override fun part1(): Int {
         val layerWithFewestZeros = layers.minBy { it.count { it == '0' } }!!
@@ -23,7 +23,7 @@ class Day08(
     override fun part2(): String {
         val result = layers.reversed().reduce { acc, layer -> acc stack layer }
 
-        return result.windowed(width, step = width).joinToString("\n") { line ->
+        return result.chunked(width).joinToString("\n") { line ->
             line.joinToString("") {
                 when (it) {
                     '0' -> " "
