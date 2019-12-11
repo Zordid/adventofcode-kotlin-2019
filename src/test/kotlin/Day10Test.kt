@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import kotlin.math.atan2
 
 internal class Day10Test {
 
@@ -14,6 +15,30 @@ internal class Day10Test {
         @Test
         fun `part 2`() {
             assertEquals(1119, Day10().part2())
+        }
+    }
+
+    fun toAngle(v: Point): Double {
+        val v2 = v.y to -v.x
+        return atan2(v2.y.toDouble(), v2.x.toDouble())
+    }
+
+    @Test
+    fun again() {
+        val field = """
+            #..#...
+            ....#..
+            ....#.#
+            ...#...
+            ..#....
+            ...#...
+            ...#..#
+        """.trimIndent().split("\n")
+
+        val d = Day10(field)
+        val v = d.field.visibleFromByAngle(3 to 3)
+        v.entries.sortedBy { toAngle(it.key) }.forEach {
+            println("${it.key} => ${atan2(it.key.y.toDouble(), it.key.x.toDouble())} / ${toAngle(it.key)} = ${it.value}")
         }
     }
 
@@ -41,7 +66,7 @@ internal class Day10Test {
             allPointsInArea(
                 origin,
                 4 to 4
-            ).map { a -> if (a in asteroids) day10.field.visibleAsteroidsFrom(a).size else '.' }
+            ).map { a -> if (a in asteroids) day10.field.countVisibleFrom(a).toString() else "." }
                 .chunked(5).joinToString("\n") { it.joinToString("") }
 
         assertEquals(expected, result)

@@ -2,13 +2,15 @@ import de.bmw.dojo.pixelgameengine.PixelGameEngine
 import java.awt.Color
 import kotlin.math.abs
 
-
 class Day10Graphical(val day10: Day10) : PixelGameEngine() {
 
     val field = day10.field
     val asteroids = field.asteroids
+
     val best = day10.bestStation()
-    val notVisibleByBest = asteroids - day10.field.visibleAsteroidsFrom(best) - best
+    val visibleByBest = day10.field.visibleFrom(best)
+    val notVisibleByBest = asteroids - visibleByBest - best
+    val visibleByAngle = day10.field.visibleFromByAngle(best)
 
     val fps = 30
     val sleep = 1000L / fps
@@ -28,32 +30,36 @@ class Day10Graphical(val day10: Day10) : PixelGameEngine() {
             phaseLogic(cycle - cycleRange.first, cycleRange.last - cycleRange.first)
     }
 
-    var cycle = -200
+    var cycle = 0
 
     val hitIterator = day10.field.hitSequenceFrom(best).iterator()
 
     var currentlyDestroying: Point? = null
     var destroyCount = 0
     var solutionPart2: Point? = null
-    var visible = field.visibleAsteroidsFrom(best)
+    var visible = field.visibleFrom(best)
 
     fun drawAsteroid(p: Point, color: Color) {
         draw(p.x * 3 + 1, p.y * 3 + 1, color)
     }
 
+    val middleGray = Color(128, 128, 128)
+
     override fun onCreate() {
-        asteroids.forEach { drawAsteroid(it, Color.WHITE) }
-        drawAsteroid(best, Color.GREEN)
+        asteroids.forEach { drawAsteroid(it, middleGray) }
+        //drawAsteroid(best, Color.GREEN)
     }
 
     override fun onUpdate(elapsedTime: Long) {
         phase(1.seconds..3.seconds) { f, max ->
-            notVisibleByBest.forEach {
-                val color = colorTransition(Color.WHITE, Color(60, 60, 60), f.toFloat() / max)
-                drawAsteroid(it, color)
-            }
+            val colorFadingOut = colorTransition(middleGray, Color(60, 60, 60), f.toFloat() / max)
+            val colorFadingIn = colorTransition(middleGray, Color.WHITE, f.toFloat() / max)
+            val colorBest = colorTransition(middleGray, Color.GREEN, f.toFloat() / max)
+            visibleByBest.forEach { drawAsteroid(it, colorFadingIn) }
+            notVisibleByBest.forEach { drawAsteroid(it, colorFadingOut) }
+            drawAsteroid(best, colorBest)
         }
-        phase(3.seconds..Int.MAX_VALUE) { f, max ->
+        phase(4.seconds..Int.MAX_VALUE) { f, max ->
             currentlyDestroying?.apply {
                 if (destroyCount != 200)
                     drawAsteroid(this, Color.BLACK)
@@ -64,10 +70,12 @@ class Day10Graphical(val day10: Day10) : PixelGameEngine() {
                         drawLine(x * 3, y * 3 + 1, x * 3 + 2, y * 3 + 1, Color.ORANGE)
                     }
                 }
-                field.asteroids.remove(this)
-                val newVisible = field.visibleAsteroidsFrom(best)
-                visible = newVisible
-                newVisible.forEach { drawAsteroid(it, Color.WHITE) }
+                visibleByAngle.forEach { (_, l) ->
+                    val idx = l.indexOf(this)
+                    if (idx >= 0 && idx + 1 in l.indices) {
+                        drawAsteroid(l[idx + 1], Color.WHITE)
+                    }
+                }
             }
             if (hitIterator.hasNext()) {
                 destroyCount++
@@ -88,6 +96,7 @@ class Day10Graphical(val day10: Day10) : PixelGameEngine() {
 
 fun main() {
     val day10 = Day10()
+
     with(Day10Graphical(day10)) {
         construct(day10.field.dimX * 3, day10.field.dimY * 3, 6, 6)
         start()

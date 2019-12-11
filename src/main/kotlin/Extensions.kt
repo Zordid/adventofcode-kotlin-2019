@@ -11,6 +11,8 @@ val Point.y: Int
 val Point.manhattanDistance: Int
     get() = x.absoluteValue + y.absoluteValue
 
+infix fun Point.manhattanDistanceTo(other: Point) = (this - other).manhattanDistance
+
 fun Point.right(steps: Int = 1) = x + steps to y
 fun Point.left(steps: Int = 1) = x - steps to y
 fun Point.up(steps: Int = 1) = x to y - steps
@@ -20,6 +22,8 @@ val origin = 0 to 0
 
 infix operator fun Point.plus(other: Point) = x + other.x to y + other.y
 infix operator fun Point.minus(other: Point) = x - other.x to y - other.y
+infix operator fun Point.times(factor: Int) = x * factor to y * factor
+infix operator fun Point.div(factor: Int) = x / factor to y / factor
 
 fun allPointsInArea(from: Point, to: Point): Sequence<Point> = sequence {
     for (y in from.y..to.y) {
