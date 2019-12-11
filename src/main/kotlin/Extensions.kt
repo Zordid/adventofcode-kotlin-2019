@@ -19,17 +19,26 @@ fun Point.down(steps: Int = 1) = x to y + steps
 val origin = 0 to 0
 
 infix operator fun Point.plus(other: Point) = x + other.x to y + other.y
+infix operator fun Point.minus(other: Point) = x - other.x to y - other.y
 
-fun rectArea(from: Point, to: Point): Sequence<Point> = sequence {
-    for (y in from.y .. to.y) {
-        for (x in from.x .. to.x) {
+fun allPointsInArea(from: Point, to: Point): Sequence<Point> = sequence {
+    for (y in from.y..to.y) {
+        for (x in from.x..to.x) {
             yield(x to y)
         }
     }
 }
 
-fun <T> List<List<T>>.matchingIndexes(predicate: (T)->Boolean): List<Point> =
-    mapIndexed { y, l -> l.mapIndexedNotNull{ x, item -> if (predicate(item)) x to y else null } }.flatten()
+fun Iterable<Point>.areaCovered(): Pair<Point, Point> {
+    val maxX = maxBy { it.x }?.x!!
+    val minX = minBy { it.x }?.x!!
+    val maxY = maxBy { it.y }?.y!!
+    val minY = minBy { it.y }?.y!!
+    return (minX to minY) to (maxX to maxY)
+}
+
+fun <T> List<List<T>>.matchingIndexes(predicate: (T) -> Boolean): List<Point> =
+    mapIndexed { y, l -> l.mapIndexedNotNull { x, item -> if (predicate(item)) x to y else null } }.flatten()
 
 fun gcd(a: Int, b: Int): Int = if (b == 0) a.absoluteValue else gcd(b, a % b)
 

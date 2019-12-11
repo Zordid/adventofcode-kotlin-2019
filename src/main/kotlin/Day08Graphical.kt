@@ -27,7 +27,7 @@ class SIFVisualizer(val image: String) : PixelGameEngine() {
                 }
             }
         layer++
-        if (layer > layers.size+50) {
+        if (layer > layers.size + 50) {
             clear()
             layer = -50
         }

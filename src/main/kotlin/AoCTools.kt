@@ -17,6 +17,7 @@ abstract class Day<T>(
 
     fun run() {
         println("=== AoC $year, day $day ===")
+        println("Input: ${input.take(5).joinToString()}}, ...")
         println("Solution 1:\n${part1()}")
         println("Solution 2:\n${part2()}")
     }

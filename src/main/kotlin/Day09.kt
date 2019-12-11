@@ -1,12 +1,17 @@
 class Day09(testData: List<String>? = null) : Day<String>(9, 2019, ::asStrings, testData) {
 
-    override fun part1(): Any? {
-        input.justLongs().execute()
-        return super.part1()
+    private val program = input.justLongs()
+
+    override fun part1(): Long {
+        var result = 0L
+        program.execute(input = { 1 }, output = { result = it })
+        return result
     }
 
-    override fun part2(): Any? {
-        return super.part2()
+    override fun part2(): Long {
+        var result = 0L
+        program.execute(input = { 2 }, output = { result = it })
+        return result
     }
 }
 

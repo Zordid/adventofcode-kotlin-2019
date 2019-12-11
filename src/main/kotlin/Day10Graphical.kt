@@ -16,13 +16,6 @@ class Day10Graphical(val day10: Day10) : PixelGameEngine() {
     val Int.seconds: Int
         get() = fps * this
 
-    override fun onCreate() {
-        asteroids.forEach { drawAsteroid(it, Color.WHITE) }
-        drawAsteroid(best, Color.GREEN)
-    }
-
-    var cycle = 0
-
     fun colorTransition(from: Color, to: Color, ratio: Float): Color {
         val red = abs(ratio * to.red + (1 - ratio) * from.red).toInt()
         val green = abs(ratio * to.green + (1 - ratio) * from.green).toInt()
@@ -35,6 +28,8 @@ class Day10Graphical(val day10: Day10) : PixelGameEngine() {
             phaseLogic(cycle - cycleRange.first, cycleRange.last - cycleRange.first)
     }
 
+    var cycle = -200
+
     val hitIterator = day10.field.hitSequenceFrom(best).iterator()
 
     var currentlyDestroying: Point? = null
@@ -44,6 +39,11 @@ class Day10Graphical(val day10: Day10) : PixelGameEngine() {
 
     fun drawAsteroid(p: Point, color: Color) {
         draw(p.x * 3 + 1, p.y * 3 + 1, color)
+    }
+
+    override fun onCreate() {
+        asteroids.forEach { drawAsteroid(it, Color.WHITE) }
+        drawAsteroid(best, Color.GREEN)
     }
 
     override fun onUpdate(elapsedTime: Long) {
@@ -89,7 +89,7 @@ class Day10Graphical(val day10: Day10) : PixelGameEngine() {
 fun main() {
     val day10 = Day10()
     with(Day10Graphical(day10)) {
-        construct(day10.field.dimX * 3, day10.field.dimY * 3, 8, 8)
+        construct(day10.field.dimX * 3, day10.field.dimY * 3, 6, 6)
         start()
     }
 }

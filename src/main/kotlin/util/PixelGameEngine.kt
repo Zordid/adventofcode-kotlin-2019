@@ -69,10 +69,12 @@ abstract class PixelGameEngine {
             defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
             isResizable = false
             pack()
-            size = with(insets) {Dimension(
-                screenWidth * pixelWidth + left + right,
-                screenHeight * pixelHeight + top + bottom
-            )}
+            size = with(insets) {
+                Dimension(
+                    screenWidth * pixelWidth + left + right,
+                    screenHeight * pixelHeight + top + bottom
+                )
+            }
             panel.alignmentX = JComponent.CENTER_ALIGNMENT
             panel.alignmentY = JComponent.CENTER_ALIGNMENT
             add(panel)

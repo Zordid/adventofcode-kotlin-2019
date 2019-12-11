@@ -62,6 +62,7 @@ class ShipComputer(
         memory = program.toMutableList()
         memory.initializer()
         ip = 0
+        rb = 0
         halt = false
     }
 

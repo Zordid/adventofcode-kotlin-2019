@@ -38,7 +38,10 @@ internal class Day10Test {
         val day10 = Day10(field)
         val asteroids = day10.field.asteroids
         val result =
-            rectArea(origin, 4 to 4).map { a -> if (a in asteroids) day10.field.visibleAsteroidsFrom(a).size else '.' }
+            allPointsInArea(
+                origin,
+                4 to 4
+            ).map { a -> if (a in asteroids) day10.field.visibleAsteroidsFrom(a).size else '.' }
                 .chunked(5).joinToString("\n") { it.joinToString("") }
 
         assertEquals(expected, result)
