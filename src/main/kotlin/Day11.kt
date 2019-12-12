@@ -51,10 +51,10 @@ class Day11(testData: List<String>? = null) : Day<String>(11, 2019, ::asStrings,
                         whitePanels.add(currentPosition)
                 }
 
-                direction = if (turn == 0L)
-                    direction.left
-                else
-                    direction.right
+                direction = when (turn) {
+                    0L -> direction.left
+                    else -> direction.right
+                }
 
                 currentPosition = when (direction) {
                     Direction.UP -> currentPosition.up()

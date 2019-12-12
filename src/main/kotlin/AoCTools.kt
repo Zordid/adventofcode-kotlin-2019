@@ -57,6 +57,9 @@ fun getInputAsStrings(day: Int = today, year: Int = thisYear): List<String> =
 fun getInputAsInts(day: Int = today, year: Int = thisYear): List<Int> =
     getInput(day, year) { it }.let { if (it.size == 1) it[0].split(",").map { it.toInt() } else it.map { it.toInt() } }
 
+fun getInputAsLongs(day: Int = today, year: Int = thisYear): List<Long> =
+    getInput(day, year) { it }.let { if (it.size == 1) it[0].split(",").map { it.toLong() } else it.map { it.toLong() } }
+
 fun <T> getInput(day: Int = today, year: Int = thisYear, mapper: (String) -> T): List<T> {
     val cached = readInput(day, year, mapper)
     if (cached != null) return cached
