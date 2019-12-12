@@ -9,15 +9,24 @@ abstract class Day<T>(
     processor: (String) -> T,
     testData: List<String>? = null
 ) {
-
     val input: List<T> = testData?.map(processor) ?: getInput(day, year, processor)
 
-    open fun part1(): Any? = null
-    open fun part2(): Any? = null
+    open fun part1(): Any? = "TODO"
+    open fun part2(): Any? = "TODO"
+
+    fun showInputHint() {
+        println("= INPUT ===================")
+        input.take(5).forEachIndexed { idx, l ->
+            println("${idx+1}: ${l.toString()}")
+        }
+        if (input.size > 5) println("...${input.size} more...")
+        println("===========================")
+    }
 
     fun run() {
         println("=== AoC $year, day $day ===")
-        println("Input: ${input.take(5).joinToString()}}, ...")
+        showInputHint()
+
         println("Solution 1:\n${part1()}")
         println("Solution 2:\n${part2()}")
     }
@@ -58,7 +67,10 @@ fun getInputAsInts(day: Int = today, year: Int = thisYear): List<Int> =
     getInput(day, year) { it }.let { if (it.size == 1) it[0].split(",").map { it.toInt() } else it.map { it.toInt() } }
 
 fun getInputAsLongs(day: Int = today, year: Int = thisYear): List<Long> =
-    getInput(day, year) { it }.let { if (it.size == 1) it[0].split(",").map { it.toLong() } else it.map { it.toLong() } }
+    getInput(
+        day,
+        year
+    ) { it }.let { if (it.size == 1) it[0].split(",").map { it.toLong() } else it.map { it.toLong() } }
 
 fun <T> getInput(day: Int = today, year: Int = thisYear, mapper: (String) -> T): List<T> {
     val cached = readInput(day, year, mapper)

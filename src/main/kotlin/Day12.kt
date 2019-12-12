@@ -62,19 +62,6 @@ class Day12(testData: List<String>? = null) : Day<Vector3D>(12, 2019, ::stringTo
 
     fun Pair<Vector3D, Vector3D>.energy() = first.manhattanDistance * second.manhattanDistance
 
-    fun Pair<Vector3D, Vector3D>.amplitude(): Int {
-        val diff = (first - second).absoluteValue
-
-        val ampX = diff.x.duration()
-        val ampY = diff.y.duration()
-        val ampZ = diff.z.duration()
-
-        val lcm1 = lcm(ampX, ampY)
-        val lcm2 = lcm(lcm1, ampZ)
-        return lcm2
-    }
-
-    fun lcm(a: Int, b: Int) = a * b / gcd(a, b)
     fun lcm(a: Long, b: Long) = a * b / gcd(a, b)
 
     override fun part1(): Int {
@@ -87,76 +74,19 @@ class Day12(testData: List<String>? = null) : Day<Vector3D>(12, 2019, ::stringTo
     override fun part2(): Any? {
         val cX = constellation.map { it.first.x }
         val sX = simulate(cX)
-        println("sX = $sX")
         val cY = constellation.map { it.first.y }
         val sY = simulate(cY)
-        println("sY = $sY")
         val cZ = constellation.map { it.first.z }
         val sZ = simulate(cZ)
-        println("sZ = $sZ")
 
-        val lcm = lcm(listOf(sX.toLong(), sY.toLong(), sZ.toLong()))
-        println(lcm)
-        return null
-
-        println("\n\n")
-        moonsInTime = constellation.toMutableList()
-        val x = constellation.indices.map { idx1 ->
-            (idx1 + 1..constellation.lastIndex).map { idx2 ->
-                val p = (constellation[idx1].first to constellation[idx2].first)
-
-                p.amplitude()
-
-
-//
-            }
-        }.flatten()
-
-        val result = lcm(x)
-        println(result)
-
-        steps = 0
-        do {
-            //print()
-            //println("$steps: ${moonsInTime.sumBy { it.energy() }}")
-            step()
-        } while (moonsInTime.toList() != constellation)
-        print()
-        println("$steps: ${moonsInTime.sumBy { it.energy() }}")
-        return super.part2()
-    }
-
-    private fun lcm(x: List<Int>): Int {
-        if (x.size == 1)
-            return x[0]
-        if (x.size == 2) {
-            return lcm(x[0], x[1])
-        }
-        return lcm(x[0], lcm(x.slice(1..x.lastIndex)))
+        return lcm(listOf(sX.toLong(), sY.toLong(), sZ.toLong()))
     }
 
     private fun lcm(x: List<Long>): Long {
         if (x.size == 1)
             return x[0]
-        if (x.size == 2) {
-            return lcm(x[0], x[1])
-        }
         return lcm(x[0], lcm(x.slice(1..x.lastIndex)))
     }
-}
-
-val distanceCache = mutableListOf(0, 0)
-
-fun distance(t: Int): Int = when (t) {
-    in distanceCache -> distanceCache[t]
-    else -> 2 * t + distance(t - 1)
-}
-
-fun Int.duration(): Int {
-    if (this == 0) return 1
-    val time = (0..Int.MAX_VALUE).indexOfFirst { distance(it) >= this }
-    val penalty = if (distance(time) == this) 1 else 0
-    return (time * 2 + penalty) * 2
 }
 
 fun simulate(pInitial: List<Int>): Int {
@@ -181,19 +111,10 @@ fun simulate(pInitial: List<Int>): Int {
         //println("$p v= $v")
     } while (v != vInitial)
     steps *= 2
-    println("Result: $steps")
+    //println("Result: $steps")
     return steps
 }
 
 fun main() {
-
-
-
-    val testInput = """
-    <x=-8, y=-10, z=0>
-    <x=5, y=5, z=10>
-<x=2, y=-7, z=3>
-<x=9, y=-8, z=-3>
-""".trimIndent().split("\n")
     Day12().run()
 }
