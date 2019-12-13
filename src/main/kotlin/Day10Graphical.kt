@@ -59,7 +59,7 @@ class Day10Graphical(val day10: Day10) : PixelGameEngine() {
             notVisibleByBest.forEach { drawAsteroid(it, colorFadingOut) }
             drawAsteroid(best, colorBest)
         }
-        phase(4.seconds..Int.MAX_VALUE) { f, max ->
+        phase(4.seconds..Int.MAX_VALUE) { _, _ ->
             currentlyDestroying?.apply {
                 if (destroyCount != 200)
                     drawAsteroid(this, Color.BLACK)
