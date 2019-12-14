@@ -1,4 +1,4 @@
-package de.bmw.dojo.pixelgameengine
+package util
 
 import java.awt.Color
 import java.awt.Dimension
@@ -65,7 +65,7 @@ abstract class PixelGameEngine {
         panel = GamePanel(pixelWidth, pixelHeight)
         frame = JFrame()
         with(frame) {
-            title = "de.bmw.dojo.pixelgameengine.PixelGameEngine - $appName"
+            title = "util.PixelGameEngine - $appName"
             defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
             isResizable = false
             pack()

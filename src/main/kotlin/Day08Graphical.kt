@@ -1,4 +1,4 @@
-import de.bmw.dojo.pixelgameengine.PixelGameEngine
+import util.PixelGameEngine
 import java.awt.Color
 
 class SIFVisualizer(val image: String) : PixelGameEngine() {

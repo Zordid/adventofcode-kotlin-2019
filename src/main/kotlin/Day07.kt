@@ -14,7 +14,7 @@ class Day07(testData: List<String>? = null) : Day<String>(7, 2019, ::asStrings, 
             val input = sequenceOf(phase, out)
             //print("---$index---\ninput is ${input.toList()}")
             val iterator = input.iterator()
-            ShipComputer(program, input = { iterator.next() }, output = { v -> out = v }).run()
+            IntcodeComputer(program, input = { iterator.next() }, output = { v -> out = v }).run()
             //println(" => $out")
         }
         return out
@@ -24,7 +24,7 @@ class Day07(testData: List<String>? = null) : Day<String>(7, 2019, ::asStrings, 
         val channels = phases.map { Channel<Long>(2) }
 
         val amps = phases.indices.map { id ->
-            ShipComputer(
+            IntcodeComputer(
                 program,
                 input = { channels[id].receive() },
                 output = { out -> channels[(id + 1) % channels.size].send(out) }

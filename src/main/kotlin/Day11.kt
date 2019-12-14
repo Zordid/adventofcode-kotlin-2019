@@ -25,7 +25,7 @@ class Day11(testData: List<String>? = null) : Day<String>(11, 2019, ::asStrings,
         val inputChannel = Channel<Long>(1)
         val outputChannel = Channel<Long>(2)
 
-        val robot = ShipComputer(program, input = { inputChannel.receive() }, output = { outputChannel.send(it) })
+        val robot = IntcodeComputer(program, input = { inputChannel.receive() }, output = { outputChannel.send(it) })
 
         var direction = Direction.UP
         var currentPosition = 0 to 0

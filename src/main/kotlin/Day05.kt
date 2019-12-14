@@ -4,14 +4,14 @@ class Day05 : Day<String>(5, 2019, ::asStrings) {
 
     override fun part1(): Long {
         var result = 0L
-        val c = ShipComputer(program, { 1 }, { result = it })
+        val c = IntcodeComputer(program, { 1 }, { result = it })
         c.run()
         return result
     }
 
     override fun part2(): Long {
         var result = 0L
-        val c = ShipComputer(program, { 5 }, { result = it })
+        val c = IntcodeComputer(program, { 5 }, { result = it })
         c.run()
         return result
     }

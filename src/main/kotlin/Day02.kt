@@ -3,9 +3,9 @@ class Day02 : Day<String>(2, 2019, ::asStrings) {
     private val program = input.justLongs()
 
     override fun part1(): Long {
-        val computer = ShipComputer(program)
+        val computer = IntcodeComputer(program)
         computer.reset {
-            set(1, 12, 2)
+            set(1, listOf<Long>(12, 2))
         }
 
         computer.run()
@@ -13,12 +13,12 @@ class Day02 : Day<String>(2, 2019, ::asStrings) {
     }
 
     override fun part2(): Long {
-        val computer = ShipComputer(program)
+        val computer = IntcodeComputer(program)
         return (0..9999L).first { idx ->
             val noun = idx / 100
             val verb = idx % 100
             computer.reset {
-                set(1, noun, verb)
+                set(1, listOf(noun, verb))
             }
             computer.run()
             computer.memory[0] == 19690720L

@@ -7,7 +7,7 @@ internal class Day02Test {
 
     @Test
     fun testShipComputer() {
-        val computer = ShipComputer(listOf(1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50))
+        val computer = IntcodeComputer(listOf(1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50))
         computer.run()
         assertEquals(3500, computer.memory[0])
     }

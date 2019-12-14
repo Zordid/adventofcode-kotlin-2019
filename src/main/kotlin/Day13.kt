@@ -3,41 +3,39 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
+import shipcomputer.SCDebugger
 
 @ExperimentalCoroutinesApi
 class Day13(testData: List<String>? = null) : Day<String>(13, 2019, ::asStrings, testData) {
 
     private val program = input.justLongs()
 
-    private fun getMap() = runBlocking {
-        val outChannel = Channel<Long>(Channel.UNLIMITED)
-        val sc = ShipComputer(program, output = { outChannel.send(it) })
+    val recorder = mutableListOf<String>()
 
-        launch { sc.runAsync() }.join()
-
-        val map = mutableMapOf<Point, Int>()
-        while (!outChannel.isEmpty) {
-            val (x, y, tileType) = outChannel.getNext(3)
-            map[x to y] = tileType
-        }
-        map
-    }
-
-    override fun part1(): Any? = getMap().count { it.value == 2 }
+    override fun part1() =
+        mutableListOf<Long>().apply {
+            program.execute { this.add(it) }
+        }.chunked(3).count { it[2] == 2L }
 
     private suspend fun Channel<Long>.getNext(n: Int) = (1..n).map { receive().toInt() }
 
-    override fun part2(): Any? = runBlocking {
-        var joystick = 0L
+    override fun part2(): Int = runBlocking {
+        var joystick = 0
         val outChannel = Channel<Long>(Channel.UNLIMITED)
-        val sc = ShipComputer(program, output = { outChannel.send(it) }, input = { joystick }).apply {
-            writeMem(0, 2)
+
+        suspend fun input(): Long {
+            recorder += "joystick $joystick"
+            return joystick.toLong()
+        }
+
+        val sc = IntcodeComputer(program, output = { outChannel.send(it) }, input = ::input).apply {
+            memory[0] = 2
         }
 
         val map = mutableMapOf<Point, Int>()
 
-        var pedal: Point = origin
-        var ball: Point = origin
+        var pedal = origin
+        var ball = origin
 
         var score = 0
 
@@ -53,7 +51,9 @@ class Day13(testData: List<String>? = null) : Day<String>(13, 2019, ::asStrings,
                 val (x, y, t) = outChannel.getNext(3)
                 if (x == -1 && y == 0) {
                     score = t
+                    recorder += "score $score"
                 } else {
+                    recorder += "$x, $y, $t"
                     map[x to y] = t
                     when (t) {
                         4 -> {
@@ -70,11 +70,7 @@ class Day13(testData: List<String>? = null) : Day<String>(13, 2019, ::asStrings,
                     //drawScreen(score, map)
                     redraw = false
                 }
-                joystick = when {
-                    ball.x < pedal.x -> -1L
-                    ball.x == pedal.x -> 0
-                    else -> +1L
-                }
+                joystick = ball.x.compareTo(pedal.x)
             }
 
 
@@ -103,6 +99,7 @@ class Day13(testData: List<String>? = null) : Day<String>(13, 2019, ::asStrings,
     }
 }
 
+@ExperimentalCoroutinesApi
 fun main() {
     Day13().run()
 }
