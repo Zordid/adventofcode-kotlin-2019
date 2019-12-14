@@ -65,7 +65,7 @@ abstract class PixelGameEngine {
         panel = GamePanel(pixelWidth, pixelHeight)
         frame = JFrame()
         with(frame) {
-            title = "util.PixelGameEngine - $appName"
+            title = "PixelGameEngine - $appName"
             defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
             isResizable = false
             pack()
