@@ -1,5 +1,23 @@
 import kotlin.math.absoluteValue
 
+enum class Direction {
+    UP, RIGHT, DOWN, LEFT;
+
+    val right: Direction
+        get() = values()[(this.ordinal + 1) % values().size]
+    val left: Direction
+        get() = values()[(this.ordinal - 1 + values().size) % values().size]
+    val opposite: Direction
+        get() = values()[(this.ordinal + 2) % values().size]
+    val vector: Point
+        get() = when (this) {
+            UP -> 0 to -1
+            DOWN -> 0 to 1
+            LEFT -> -1 to 0
+            RIGHT -> 1 to 0
+        }
+}
+
 typealias Point = Pair<Int, Int>
 
 val Point.x: Int
@@ -18,6 +36,9 @@ fun Point.left(steps: Int = 1) = x - steps to y
 fun Point.up(steps: Int = 1) = x to y - steps
 fun Point.down(steps: Int = 1) = x to y + steps
 
+fun Point.neighbor(direction: Direction) = this + direction.vector
+fun Point.neighbors() = Direction.values().map { neighbor(it) }
+
 val origin = 0 to 0
 
 infix operator fun Point.plus(other: Point) = x + other.x to y + other.y
@@ -33,12 +54,23 @@ fun allPointsInArea(from: Point, to: Point): Sequence<Point> = sequence {
     }
 }
 
-fun Iterable<Point>.areaCovered(): Pair<Point, Point> {
-    val maxX = maxBy { it.x }?.x!!
+fun Pair<Point, Point>.allPoints() = allPointsInArea(first, second)
+
+val Pair<Point, Point>.width: Int
+    get() = second.x - first.x + 1
+
+fun Iterable<Point>.boundingBox(): Pair<Point, Point> {
     val minX = minBy { it.x }?.x!!
-    val maxY = maxBy { it.y }?.y!!
+    val maxX = maxBy { it.x }?.x!!
     val minY = minBy { it.y }?.y!!
+    val maxY = maxBy { it.y }?.y!!
     return (minX to minY) to (maxX to maxY)
+}
+
+fun Iterable<Point>.widthOfBoundingBox(): Int {
+    val minX = minBy { it.x }?.x!!
+    val maxX = maxBy { it.x }?.x!!
+    return maxX - minX
 }
 
 fun <T> List<List<T>>.matchingIndexes(predicate: (T) -> Boolean): List<Point> =

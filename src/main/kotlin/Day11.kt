@@ -75,7 +75,7 @@ class Day11(testData: List<String>? = null) : Day<String>(11, 2019, ::asStrings,
     override fun part2(): String {
         val space = scanSpace(listOf(origin)).second
 
-        val (upperLeft, lowerRight) = space.areaCovered()
+        val (upperLeft, lowerRight) = space.boundingBox()
 
         return allPointsInArea(upperLeft, lowerRight)
             .chunked(lowerRight.x - upperLeft.x + 1)

@@ -3,7 +3,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
-import shipcomputer.SCDebugger
 
 @ExperimentalCoroutinesApi
 class Day13(testData: List<String>? = null) : Day<String>(13, 2019, ::asStrings, testData) {
@@ -81,7 +80,7 @@ class Day13(testData: List<String>? = null) : Day<String>(13, 2019, ::asStrings,
     }
 
     private fun drawScreen(score: Int, map: MutableMap<Pair<Int, Int>, Int>) {
-        val (upperLeft, lowerRight) = map.keys.areaCovered()
+        val (upperLeft, lowerRight) = map.keys.boundingBox()
         allPointsInArea(upperLeft, lowerRight).forEach { (x, y) ->
             val c = when (map[x to y]) {
                 0 -> ' '

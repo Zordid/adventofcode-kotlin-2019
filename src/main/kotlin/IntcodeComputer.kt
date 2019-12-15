@@ -1,3 +1,4 @@
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
 import kotlin.math.max
@@ -75,6 +76,9 @@ class LongMemory : Memory<Long> {
     }
 
 }
+
+fun byInChannel(channel: Channel<Long>): suspend () -> Long = { channel.receive() }
+fun byOutChannel(channel: Channel<Long>): suspend (Long) -> Unit = { v: Long -> channel.send(v) }
 
 class IntcodeComputer(
     private val program: List<Long> = emptyList(),
@@ -173,3 +177,7 @@ fun List<Long>.execute(
     output: suspend (Long) -> Unit = ::defaultConsoleOutput
 ) =
     IntcodeComputer(this, input, output).run()
+
+typealias IntcodeProgram = List<Long>
+
+fun List<String>.asIntcode() = first().split(",").map { it.toLong() }

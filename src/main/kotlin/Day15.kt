@@ -1,197 +1,172 @@
-import kotlinx.coroutines.cancelAndJoin
+import Direction.*
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import util.AStar
+import util.AStarSearch
+import util.Graph
+import util.completeAcyclicTraverse
 
-const val GO_UP = 1L
-const val GO_DOWN = 2L
-const val GO_LEFT = 3L
-const val GO_RIGHT = 4L
+enum class AreaType { WALL, FLOOR }
+
+class RobotControl(program: IntcodeProgram) {
+
+    private val inChannel = Channel<Long>(1)
+    private val outChannel = Channel<Long>(1)
+    private val soc = IntcodeComputer(program, byInChannel(inChannel), byOutChannel(outChannel))
+    var debugChannel: Channel<Boolean>? = null
+
+    var currentPosition = origin
+        private set
+    val knownMap = mutableMapOf(origin to AreaType.FLOOR)
+
+    var targetPosition: Point? = null
+    var walkedAgainstWall = 0
+    var walkedSuccessfully = 0
+
+    private val Direction.cmd: Long
+        get() = when (this) {
+            UP -> 1L
+            DOWN -> 2L
+            LEFT -> 3L
+            RIGHT -> 4L
+        }
+
+    init {
+        GlobalScope.launch { soc.runAsync() }
+    }
+
+    suspend fun walk(direction: Direction): Boolean {
+        val nextPosition = currentPosition.neighbor(direction)
+        if (knownMap[nextPosition] == AreaType.WALL)
+            return false
+        inChannel.send(direction.cmd)
+        val result = outChannel.receive()
+        debugChannel?.receive()
+        val wall = result == 0L
+        val foundTarget = result == 2L
+        knownMap[nextPosition] = if (wall) {
+            walkedAgainstWall++
+            AreaType.WALL
+        } else {
+            currentPosition = nextPosition
+            walkedSuccessfully++
+            AreaType.FLOOR
+        }
+        if (foundTarget) {
+            targetPosition = currentPosition
+        }
+        return !wall
+    }
+
+    suspend fun exploreNeighbors() {
+        values().forEach { direction ->
+            if (!knownMap.containsKey(currentPosition.neighbor(direction)))
+                if (walk(direction)) walk(direction.opposite)
+        }
+    }
+
+    fun printStatus() {
+        println("Droid is at $currentPosition")
+        println("Droid walk stats: ${walkedAgainstWall + walkedSuccessfully} total, $walkedAgainstWall against wall.")
+        val boundingBox = knownMap.keys.boundingBox()
+        boundingBox.allPoints().chunked(boundingBox.width).forEach { row ->
+            println(row.joinToString("") { pos ->
+                when {
+                    pos == currentPosition -> "D"
+                    pos == targetPosition -> "$"
+                    pos == origin -> "O"
+                    knownMap[pos] == AreaType.WALL -> "#"
+                    knownMap[pos] == AreaType.FLOOR -> "."
+                    else -> "?"
+                }
+            })
+        }
+        println(boundingBox)
+    }
+
+    val knownGraph = object : Graph<Point> {
+        override fun neighborsOf(node: Point): Collection<Point> =
+            node.neighbors().filter { knownMap[it] == AreaType.FLOOR }
+    }
+
+    val unknownGraph = object : Graph<Point> {
+        override fun neighborsOf(node: Point): Collection<Point> {
+            if (node.neighbors().any { !knownMap.containsKey(it) })
+                runBlocking {
+                    safeDriveTo(node)
+                    exploreNeighbors()
+                }
+            return node.neighbors().filter { knownMap[it] == AreaType.FLOOR }
+        }
+    }
+
+    private suspend fun safeDriveTo(p: Point) {
+        if (p == currentPosition) return
+        val path = knownGraph.AStarSearch(currentPosition, p, { _, _ -> 1 }, { a, b -> a manhattanDistanceTo b })
+        path.forEach { newPos ->
+            require(
+                when (newPos) {
+                    currentPosition.up() -> walk(UP)
+                    currentPosition.down() -> walk(DOWN)
+                    currentPosition.left() -> walk(LEFT)
+                    currentPosition.right() -> walk(RIGHT)
+                    currentPosition -> true
+                    else -> false
+                }
+            )
+        }
+        require(currentPosition == p) { "Did not succeed walking to $p, stuck at $currentPosition" }
+    }
+
+}
 
 class Day15(testData: String? = null) : Day<String>(15, 2019, ::asStrings, testData?.split("\n")) {
 
-    val program = input.justLongs()
+    val robot = RobotControl(input.asIntcode())
+
+    suspend fun part1Async(): Int {
+        val explorer = GlobalScope.launch { explore() }
+        explorer.join()
+        robot.printStatus()
+        val solution =
+            robot.unknownGraph.AStarSearch(
+                robot.targetPosition!!,
+                origin,
+                { _, _ -> 1 },
+                { a, b -> a manhattanDistanceTo b })
+        return solution.size - 1
+    }
 
     override fun part1(): Int = runBlocking {
-
-        val intcodeComputer =
-            IntcodeComputer(program, input = { inChannel.receive() }, output = { outChannel.send(it) })
-        val c = launch { intcodeComputer.runAsync() }
-
-        var result = 0
-        val explorer = launch { result = explore() }
-        explorer.join()
-        c.cancelAndJoin()
-        result
+        part1Async()
     }
 
-    val inChannel = Channel<Long>(1)
-    val outChannel = Channel<Long>(1)
-
-    enum class AreaType { WALL, FLOOR, TARGET }
-
-    var position = origin
-    var target = origin
-    var knownTiles = mutableMapOf(origin to AreaType.WALL)
-
-    private val engineKnown = AStar<Point>(
-        neighborNodes = { pos ->
-            Day11.Direction.values().mapNotNull {
-                val p = when (it) {
-                    Day11.Direction.UP -> pos.up()
-                    Day11.Direction.DOWN -> pos.down()
-                    Day11.Direction.LEFT -> pos.left()
-                    Day11.Direction.RIGHT -> pos.right()
-                }
-                if (knownTiles[p] ?: AreaType.WALL != AreaType.WALL) p else null
-            }
-        },
-        cost = { from, to -> (from - to).manhattanDistance },
-        costEstimation = { from, to -> (from - to).manhattanDistance }
-    )
-
-    private val engine = AStar<Point>(
-        neighborNodes = { p ->
-            runBlocking {
-                if (p.manhattanDistanceTo(position) > 1)
-                    correctPosition(p)
-                if (p != position) {
-                    val cmd = when {
-                        p == position.left() -> GO_LEFT
-                        p == position.right() -> GO_RIGHT
-                        p == position.up() -> GO_UP
-                        p == position.down() -> GO_DOWN
-                        else -> error("Way off! Droid at $position, needs to explore $p")
-                    }
-                    inChannel.send(cmd)
-                    outChannel.receive()
-                    position = p
-                }
-                testTile()
-            }
-            printMaze()
-            Day11.Direction.values().mapNotNull {
-                val p = when (it) {
-                    Day11.Direction.UP -> position.up()
-                    Day11.Direction.DOWN -> position.down()
-                    Day11.Direction.LEFT -> position.left()
-                    Day11.Direction.RIGHT -> position.right()
-                }
-                if (knownTiles[p] != AreaType.WALL) p else null
-            }
-        },
-        cost = { from, to -> (from - to).manhattanDistance },
-        costEstimation = { from, to -> (from - to).manhattanDistance })
-
-    private suspend fun explore(): Int {
-        testTile()
-        printMaze()
-        var n = 0
-        while (!knownTiles.containsValue(AreaType.TARGET)) {
-            val destNode = unknownPlaces().first()
-            println("Exploration #${n++}. From $position to $destNode")
-            val path = engine.search(position, destNode)
-            if (path.second.isEmpty()) {
-                println("Cannot reach $destNode!...")
-            }
-            println("Exploration done. New position is $position")
-        }
-        target = knownTiles.filterValues { it == AreaType.TARGET }.keys.first()
-
-        val solution = engineKnown.search(origin, target)
-        return solution.first[target]!!
-    }
-
-    private suspend fun correctPosition(p: Point): Long {
-        println("Adjusting position to $p...")
-        val path = engineKnown.search(position, p)
-
-        val steps = mutableListOf(p)
-        while (steps.last() != position) {
-            steps.add(path.second[steps.last()]!!)
-        }
-        steps.reverse()
-        steps.removeAt(0)
-        steps.forEach { newPos ->
-            val cmd = when (newPos) {
-                position.up() -> GO_UP
-                position.down() -> GO_DOWN
-                position.left() -> GO_LEFT
-                else -> GO_RIGHT
-            }
-            inChannel.send(cmd)
-            outChannel.receive()
-            position = newPos
-        }
-
-        println("Done")
-        return 0L
-    }
-
-    fun unknownPlaces(): Sequence<Point> {
-        val area = knownTiles.keys.areaCovered()
-        return allPointsInArea(area.first, area.second).filter { knownTiles.containsKey(it) }
-    }
-
-    private fun printMaze() {
-        println()
-        println("D = $position")
-        val area = knownTiles.keys.areaCovered()
-        allPointsInArea(area.first, area.second).forEach { p ->
-            if (position == p) print('D') else
-                if (p == origin) print('o') else
-                    print(
-                        when (knownTiles[p]) {
-                            AreaType.WALL -> '#'
-                            AreaType.FLOOR -> '.'
-                            AreaType.TARGET -> 'X'
-                            else -> '?'
+    private suspend fun explore() {
+        var direction = UP
+        while (robot.targetPosition == null) {
+            //robot.unknownGraph.depthFirstSearch(robot.currentPosition, Int.MIN_VALUE to Int.MIN_VALUE)
+            //robot.unknownGraph.depthFirstSearch<Point>(robot.currentPosition) { it == robot.targetPosition }
+            //robot.walk(Direction.values()[Random.nextInt(4)])
+            with(robot) {
+                if (walk(direction.left)) direction = direction.left else {
+                    if (!walk(direction)) {
+                        if (walk(direction.right)) direction = direction.right else {
+                            walk(direction.opposite)
+                            direction = direction.opposite
                         }
-                    )
-            if (p.x == area.second.x) println()
-        }
-    }
-
-    suspend fun testTile() {
-        (1..4).forEach {
-            val probePosition = when (it) {
-                1 -> position.up()
-                2 -> position.down()
-                3 -> position.left()
-                else -> position.right()
-            }
-            if (!knownTiles.containsKey(probePosition)) {
-                inChannel.send(it.toLong())
-                val response = outChannel.receive()
-                when (response) {
-                    0L -> knownTiles[probePosition] = AreaType.WALL
-                    1L -> knownTiles[probePosition] = AreaType.FLOOR
-                    else -> knownTiles[probePosition] = AreaType.TARGET
-                }
-                if (response != 0L) {
-                    val back = when (it) {
-                        1 -> 2
-                        2 -> 1
-                        3 -> 4
-                        else -> 3
                     }
-                    inChannel.send(back.toLong())
-                    outChannel.receive()
                 }
             }
         }
+        println("Exploration done!")
     }
 
-    override fun part2(): Any? {
-        val area = knownTiles.keys.areaCovered()
-        val max = allPointsInArea(area.first, area.second).filter {
-            knownTiles[it] != AreaType.WALL
-        }.map {
-            val path = engineKnown.search(target, it)
-            it to (path.first[it] ?: 0)
-        }.maxBy { it.second }
-        return max?.second
+    override fun part2(): Int {
+        if (robot.targetPosition == null)
+            part1()
+        val levels = robot.unknownGraph.completeAcyclicTraverse(robot.targetPosition!!).toList()
+        return levels.size - 1
     }
 
 }
