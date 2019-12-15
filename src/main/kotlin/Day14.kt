@@ -1,5 +1,3 @@
-import kotlin.math.ceil
-
 data class Reaction(val need: List<Pair<Int, String>>, val result: Pair<Int, String>)
 
 const val FUEL = "FUEL"
@@ -7,12 +5,32 @@ const val ORE = "ORE"
 
 class NanoFactory(rawReactions: List<Reaction>) {
 
-    val elements = listOf(FUEL) + rawReactions.map { r ->
-        r.need.map { it.second }
-    }.flatten().distinct()
+    private val elements = extractElements(rawReactions)
 
-    val fuelIdx = elements.indexOf(FUEL)
-    val oreIdx = elements.indexOf(ORE)
+    private fun extractElements(rawReactions: List<Reaction>): List<String> {
+        val reactionDependencies = rawReactions.map {
+            it.result.second to it.need.map { it.second }
+        }.toMap()
+        val allElements = reactionDependencies.keys + reactionDependencies.values.flatten()
+
+        fun search(start: String, target: String): Boolean =
+            (reactionDependencies[start]?.contains(target) == true) ||
+                    (reactionDependencies[start]?.any { search(it, target) } == true)
+
+        fun compare(e1: String, e2: String): Int {
+            return when {
+                e1 == e2 -> 0
+                search(e1, e2) -> -1
+                search(e2, e1) -> +1
+                else -> e1.compareTo(e2)
+            }
+        }
+
+        return allElements.sortedWith(Comparator(::compare))
+    }
+
+    val fuelIdx = 0
+    val oreIdx = elements.lastIndex
 
     val reactionVectors = elements
         .map { element ->
@@ -32,9 +50,8 @@ class NanoFactory(rawReactions: List<Reaction>) {
         require(reactionVectors.count { it == null } == 1)
     }
 
-    fun createSituation(fuel: Long, ore: Long) = LongArray(elements.size).also {
+    fun createSituation(fuel: Long) = LongArray(elements.size).also {
         it[fuelIdx] = fuel
-        it[oreIdx] = ore
     }
 
     fun react(situation: LongArray): Boolean {
@@ -58,7 +75,7 @@ fun LongArray.add(other: LongArray, times: Long = 1L) {
     }
 }
 
-fun asReactions(s: String): Reaction {
+fun parseReaction(s: String): Reaction {
     val (need, result) = s.split("=>").map { it.trim() }
     val needs = need.split(Regex(",\\s+")).map {
         val (amount, material) = it.split(" ").map { it.trim() }
@@ -68,112 +85,39 @@ fun asReactions(s: String): Reaction {
     return Reaction(needs, amount.toInt() to material)
 }
 
-class Day14(testData: String? = null) : Day<Reaction>(14, 2019, ::asReactions, testData?.split("\n")) {
+class Day14(testData: String? = null) : Day<Reaction>(14, 2019, ::parseReaction, testData?.split("\n")) {
 
-    val reactions = input.map { it.result to it.need }.toMap()
+    private val nf = NanoFactory(input)
 
-    override fun part1(): Long {
-        if (true) {
-            val nf = NanoFactory(input)
-
-            val situation = nf.createSituation(-1, Long.MAX_VALUE)
-            return if (nf.react(situation)) Long.MAX_VALUE - situation[nf.oreIdx] else -1
-        }
-
-        val needs = mutableMapOf("FUEL" to 1)
-        val have = mutableMapOf("ORE" to Int.MAX_VALUE)
-
-        while (needs.entries.sumBy { it.value } > 0) {
-            val need = needs.entries.first { it.value > 0 }
-            val reaction = reactions.entries.first { it.key.second == need.key }
-
-            val factor = ceil(need.value.toDouble() / reaction.key.first).toInt()
-            val leftOver = factor * reaction.key.first - need.value
-
-            needs.remove(need.key)
-
-            reaction.value.forEach { (amount, what) ->
-                var stillNeeded = amount * factor
-                if (have[what] ?: 0 > 0) {
-                    if (have[what]!! >= stillNeeded) {
-                        have[what] = have[what]!! - stillNeeded
-                        stillNeeded = 0
-                    } else {
-                        stillNeeded -= have[what]!!
-                        have[what] = 0
-                    }
-                }
-                needs[what] = (needs[what] ?: 0) + stillNeeded
-            }
-
-            have[need.key] = (have[need.key] ?: 0) + leftOver
-        }
-        return Int.MAX_VALUE - (have["ORE"] ?: 0).toLong()
+    private fun calculateNeededOreFor(fuel: Long): Long {
+        val situation = nf.createSituation(-fuel)
+        nf.react(situation)
+        return -situation.last()
     }
 
+    fun maximizeByBinarySearch(min: Long, max: Long, linearFun: (Long) -> Boolean): Long {
+//        require(min < max)
+//        require(linearFun(min))
+//        require(!linearFun(max))
+        if (max - min == 1L) return min
+        val half = min + (max - min) / 2L
+        return if (linearFun(half))
+            maximizeByBinarySearch(half, max, linearFun)
+        else
+            maximizeByBinarySearch(min, half, linearFun)
+    }
+
+    override fun part1() = calculateNeededOreFor(1)
+
     override fun part2(): Long {
-        val initial = 1000000000000
-        val have = mutableMapOf("ORE" to initial)
+        val availableOres = 1000000000000
 
-        val nf = NanoFactory(input)
-        var situation = nf.createSituation(0, initial)
+        val perFuel = calculateNeededOreFor(1)
+        val min = availableOres / perFuel
 
-        var produced = 0L
-
-        while (situation[nf.oreIdx] > 0) {
-            situation[0] = -1
-
-            if (nf.react(situation)) {
-                produced++
-
-                val oresLeft = situation[nf.oreIdx]
-                if (situation.sum() == oresLeft) {
-                    val oresNeeded = initial - oresLeft
-                    println("Period detected after $produced FUELs and $oresNeeded OREs consumed!")
-                    println("Shortcutting... :)")
-                    val periods = (initial / oresNeeded)
-                    produced *= periods
-                    situation[nf.oreIdx] = initial % oresNeeded
-                }
-
-            }
+        return maximizeByBinarySearch(min, availableOres) {
+            calculateNeededOreFor(it) <= availableOres
         }
-        return produced
-
-
-
-
-        while (have["ORE"] ?: 0 > 0) {
-            val needs = mutableMapOf("FUEL" to 1L)
-            while (needs.entries.any { it.value > 0L } && needs["ORE"] ?: 0L == 0L) {
-                val need = needs.entries.first { it.value > 0 }
-                val reaction = reactions.entries.first { it.key.second == need.key }
-
-                val factor = ceil(need.value.toDouble() / reaction.key.first).toInt()
-                val leftOver = factor * reaction.key.first - need.value
-
-                needs.remove(need.key)
-
-                reaction.value.forEach { (amount, what) ->
-                    var stillNeeded = (amount * factor).toLong()
-                    if (have[what] ?: 0 > 0) {
-                        if (have[what]!! >= stillNeeded) {
-                            have[what] = have[what]!! - stillNeeded
-                            stillNeeded = 0
-                        } else {
-                            stillNeeded -= have[what]!!
-                            have[what] = 0
-                        }
-                    }
-                    needs[what] = (needs[what] ?: 0) + stillNeeded
-                }
-
-                have[need.key] = (have[need.key] ?: 0) + leftOver
-            }
-            if (needs["ORE"] ?: 0L == 0L)
-                produced++
-        }
-        return produced
     }
 
 }
