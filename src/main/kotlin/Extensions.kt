@@ -79,6 +79,9 @@ fun <T> List<List<T>>.matchingIndexes(predicate: (T) -> Boolean): List<Point> =
 fun gcd(a: Int, b: Int): Int = if (b == 0) a.absoluteValue else gcd(b, a % b)
 fun gcd(a: Long, b: Long): Long = if (b == 0L) a.absoluteValue else gcd(b, a % b)
 
+fun lcm(a: Long, b: Long) = a * b / gcd(a, b)
+fun lcm(a: Int, b: Int) = a * b / gcd(a, b)
+
 fun Iterable<Int>.gcd() = reduce { gcd, i -> gcd(i, gcd) }
 
 fun <T> Iterable<T>.asEndlessSequence() = sequence { while (true) yieldAll(this@asEndlessSequence) }
