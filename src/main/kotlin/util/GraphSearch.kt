@@ -66,7 +66,7 @@ fun <N> buildStack(node: N?, result: Pair<Map<N, Int>, Map<N, N>>): Stack<N> {
 
 class Dijkstra<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> Int) {
 
-    fun search(startNode: N, destNode: N?): Pair<Map<N, Int>, Map<N, N>> {
+    fun search(startNode: N, predicate: SolutionPredicate<N>): Pair<N?, Pair<Map<N, Int>, Map<N, N>>> {
         val dist = mutableMapOf<N, Int>()
         val prev = mutableMapOf<N, N>()
 
@@ -76,8 +76,8 @@ class Dijkstra<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> I
 
         while (!queue.isEmpty()) {
             val u = queue.extractMin()
-            if (u == destNode) {
-                return dist to prev
+            if (predicate(u)) {
+                return u to (dist to prev)
             }
             for (v in neighborNodes(u)) {
                 val alt = dist[u]!! + cost(u, v)
@@ -89,8 +89,11 @@ class Dijkstra<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> I
             }
         }
 
-        return dist to prev
+        return null to (dist to prev)
     }
+
+    fun search(startNode: N, destNode: N?): Pair<Map<N, Int>, Map<N, N>> =
+        search(startNode) { it == destNode }.second
 
 }
 
