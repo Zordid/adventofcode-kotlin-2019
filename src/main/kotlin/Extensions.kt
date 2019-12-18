@@ -1,4 +1,5 @@
 import kotlin.math.absoluteValue
+import kotlin.math.sign
 
 enum class Direction {
     UP, RIGHT, DOWN, LEFT;
@@ -16,9 +17,23 @@ enum class Direction {
             LEFT -> -1 to 0
             RIGHT -> 1 to 0
         }
+
+    companion object {
+        fun ofVector(v: Point): Direction? =
+            with(v) {
+                when (x.sign to y.sign) {
+                    0 to -1 -> UP
+                    1 to 0 -> RIGHT
+                    0 to 1 -> DOWN
+                    -1 to 0 -> LEFT
+                    else -> null
+                }
+            }
+    }
 }
 
 typealias Point = Pair<Int, Int>
+typealias Area = Pair<Point, Point>
 
 val Point.x: Int
     get() = first
@@ -46,18 +61,26 @@ infix operator fun Point.minus(other: Point) = x - other.x to y - other.y
 infix operator fun Point.times(factor: Int) = x * factor to y * factor
 infix operator fun Point.div(factor: Int) = x / factor to y / factor
 
-fun allPointsInArea(from: Point, to: Point): Sequence<Point> = sequence {
-    for (y in from.y..to.y) {
-        for (x in from.x..to.x) {
-            yield(x to y)
+operator fun Point.compareTo(other: Point): Int = if (y == other.y) x.compareTo(other.x) else y.compareTo(other.y)
+
+fun allPointsInArea(from: Point, to: Point): Sequence<Point> {
+    if (from > to) return allPointsInArea(to, from)
+    return sequence {
+        for (y in from.y..to.y) {
+            for (x in from.x..to.x) {
+                yield(x to y)
+            }
         }
     }
 }
 
-fun Pair<Point, Point>.allPoints() = allPointsInArea(first, second)
+fun Area.allPoints() = allPointsInArea(first, second)
 
-val Pair<Point, Point>.width: Int
-    get() = second.x - first.x + 1
+val Area.width: Int
+    get() = (second.x - first.x).absoluteValue + 1
+
+val Area.height: Int
+    get() = (second.y - first.y).absoluteValue + 1
 
 fun Iterable<Point>.boundingBox(): Pair<Point, Point> {
     val minX = minBy { it.x }?.x!!
@@ -65,12 +88,6 @@ fun Iterable<Point>.boundingBox(): Pair<Point, Point> {
     val minY = minBy { it.y }?.y!!
     val maxY = maxBy { it.y }?.y!!
     return (minX to minY) to (maxX to maxY)
-}
-
-fun Iterable<Point>.widthOfBoundingBox(): Int {
-    val minX = minBy { it.x }?.x!!
-    val maxX = maxBy { it.x }?.x!!
-    return maxX - minX
 }
 
 fun <T> List<List<T>>.matchingIndexes(predicate: (T) -> Boolean): List<Point> =
