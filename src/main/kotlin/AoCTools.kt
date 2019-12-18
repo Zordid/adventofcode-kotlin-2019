@@ -1,7 +1,6 @@
 import java.io.File
 import java.net.URL
 import java.util.*
-import java.util.regex.Pattern
 import kotlin.system.measureTimeMillis
 
 abstract class Day<T>(
@@ -18,18 +17,27 @@ abstract class Day<T>(
     fun showInputHint() {
         println("= INPUT ===================")
         input.take(5).forEachIndexed { idx, l ->
-            println("${idx+1}: ${l.toString()}")
+            println("${idx + 1}: ${l.toString()}")
         }
         if (input.size > 5) println("...${input.size} more...")
         println("===========================")
     }
 
-    fun run() {
+    inline fun runWithTiming(part: Int, f: () -> Any?) {
+        var result: Any? = null
+        val millis = measureTimeMillis { result = f() }
+        val duration = if (millis < 1000) "$millis ms" else "${"%.3f".format(millis / 1000.0)} s"
+        println("Solution $part: (took $duration)\n$result")
+    }
+
+    fun run(one: Boolean = true, two: Boolean = true) {
         println("=== AoC $year, day $day ===")
         showInputHint()
 
-        println("Solution 1:\n${part1()}")
-        println("Solution 2:\n${part2()}")
+        if (one)
+            runWithTiming(1, ::part1)
+        if (two)
+            runWithTiming(2, ::part2)
     }
 }
 

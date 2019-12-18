@@ -6,8 +6,6 @@ typealias DebugHandler<N> = (level: Int, nodesOnLevel: Collection<N>, nodesVisit
 
 typealias SolutionPredicate<N> = (node: N) -> Boolean
 
-class AStarSearchResult()
-
 class AStar<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> Int, val costEstimation: (N, N) -> Int) {
 
     fun search(startNode: N, destNode: N): Pair<Map<N, Int>, Map<N, N>> {
@@ -52,10 +50,10 @@ class AStar<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> Int,
     }
 }
 
-fun <N> buildStack(node: N?, result: Pair<Map<N, Int>, Map<N, N>>): Stack<N> {
+fun <N> buildStack(destination: N?, result: Pair<Map<N, Int>, Map<N, N>>): Stack<N> {
     val pathStack = Stack<N>()
-    if (result.first.containsKey(node)) {
-        var nodeFoundThroughPrevious = node
+    if (result.first.containsKey(destination)) {
+        var nodeFoundThroughPrevious = destination
         while (nodeFoundThroughPrevious != null) {
             pathStack.add(0, nodeFoundThroughPrevious)
             nodeFoundThroughPrevious = result.second[nodeFoundThroughPrevious]
@@ -91,9 +89,6 @@ class Dijkstra<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> I
 
         return null to (dist to prev)
     }
-
-    fun search(startNode: N, destNode: N?): Pair<Map<N, Int>, Map<N, N>> =
-        search(startNode) { it == destNode }.second
 
 }
 

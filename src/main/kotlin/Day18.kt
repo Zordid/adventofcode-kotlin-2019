@@ -1,173 +1,102 @@
-import util.Dijkstra
-import util.Graph
-import util.breadthFirstSearch
-import util.completeAcyclicTraverse
+import util.*
+import java.awt.Color
+import java.util.*
 
 class Day18(testData: List<String>? = null) : Day<String>(18, 2019, ::asStrings, testData) {
 
-    val map = input.map { it.toList() }
-    val area = origin to (map[0].size - 1 to map.size - 1)
-    val starts = area.allPoints().filter { map[it.y][it.x] == '@' }
+    val mapPart1 = input.map { it.toList() }
+    val mapPart2 = mutateMapForPart2(mapPart1)
 
-    val allKeys = area.allPoints().filter { map[it.y][it.x] in 'a'..'z' }.map { map[it.y][it.x] }.toSet()
+    val area = origin to (mapPart1[0].size - 1 to mapPart1.size - 1)
+    val allKeys = area.allPoints().filter { mapPart1[it] in 'a'..'z' }.map { mapPart1[it] }.toSet()
 
     data class State(val pos: Point, val keys: Set<Char>)
 
-    operator fun List<List<Char>>.get(p: Point) = this[p.y][p.x]
-
-    val graph = object : Graph<State> {
+    fun defineGraphForMap(map: List<List<Char>>) = object : Graph<State> {
         override fun neighborsOf(node: State) = node.pos.neighbors()
             .filter {
                 val c = map[it.y][it.x]
                 c == '.' || c == '@' || c in 'a'..'z' || (c in 'A'..'Z' && c.toLowerCase() in node.keys)
             }.map {
                 val c = map[it.y][it.x]
-                State(it, node.keys + if (c in 'a'..'z') setOf(c) else emptySet())
+                State(it, if (c in 'a'..'z') node.keys + c else node.keys)
             }
     }
 
     override fun part1(): Int {
-        return 0
-        val start = area.allPoints().filter { map[it] == '@' }.single()
+        val graph = defineGraphForMap(mapPart1)
+        val start = mapPart1.findFirst('@')!!
         val solution = graph.breadthFirstSearch<State>(State(start, emptySet())) { it.keys == allKeys }
         return solution.size - 1
     }
 
-    fun getAllKeys(start: Point, keys: Set<Char>) = graph.completeAcyclicTraverse<State>(State(start, keys))
-
-    data class State4(val steps: Int, val pos: List<Point>, val keys: Set<Char>)
-
     data class MState(val keys: Set<Char>, val pos: List<Point>)
 
-    override fun part2(): Int? {
-        println(starts.toList())
+    fun defineGraphForRobotOrchestration(map: List<List<Char>>) = object : Graph<MState> {
+        private val graph = defineGraphForMap(map)
+        private val costCache = mutableMapOf<Pair<MState, MState>, Int>()
+        private val keysWithDepthCache = Array(4) {
+            mutableMapOf<State, List<Pair<Pair<Point, Char>, Int>>>()
+        }
+        private val relevantKeysFor = (0..3).map { seg ->
+            doorsIn.filter { (door, idx) -> idx == seg }.map { it.key.toLowerCase() }.toSet()
+        }
 
-        val startM = MState(emptySet(), starts.toList())
-        val d = Dijkstra(::neighborsOf, ::cost)
-        val result = d.search(startM) { it.keys == allKeys }
+        override fun neighborsOf(node: MState): Collection<MState> {
+            val r = node.pos.mapIndexed { idx, p ->
+                val single = State(p, node.keys intersect relevantKeysFor[idx])
+                val keysWithDepth = keysWithDepthCache[idx].getOrPut(single) {
+                    val layers = graph.completeAcyclicTraverse(single)
+                    val reachableKeys =
+                        layers
+                            .map { it.second }.flatten().map { it.pos to map[it.pos] }
+                            .filter { it.second in 'a'..'z' && it.second !in node.keys }
+                            .distinct().toList()
 
-        return result.second.first[result.first]
-    }
-
-    val costCache = mutableMapOf<Pair<MState, MState>, Int>()
-
-    val keysWithDepthCache = listOf(
-        mutableMapOf<State, List<Pair<Pair<Point, Char>, Int>>>(),
-        mutableMapOf<State, List<Pair<Pair<Point, Char>, Int>>>(),
-        mutableMapOf<State, List<Pair<Pair<Point, Char>, Int>>>(),
-        mutableMapOf<State, List<Pair<Pair<Point, Char>, Int>>>()
-    )
-
-
-    fun neighborsOf(node: MState): Collection<MState> {
-        val r = node.pos.mapIndexed { idx, p ->
-            val single = State(p, node.keys intersect relevantKeysFor[idx])
-            val keysWithDepth = keysWithDepthCache[idx].getOrPut(single) {
-                val layers = graph.completeAcyclicTraverse(single)
-                val reachableKeys =
-                    layers
-                        .map { it.second }.flatten().map { it.pos to map[it.pos] }
-                        .filter { it.second in 'a'..'z' && it.second !in node.keys }
-                        .distinct().toList()
-
-                reachableKeys.map { k: Pair<Point, Char> ->
-                    k to layers.first { l: Pair<Int, Set<State>> ->
-                        k.second in l.second.flatMap { s -> s.keys }
-                    }.let { it.first }
+                    reachableKeys.map { k: Pair<Point, Char> ->
+                        k to layers.first { l: Pair<Int, Set<State>> ->
+                            k.second in l.second.flatMap { s -> s.keys }
+                        }.let { it.first }
+                    }
                 }
-            }
-            keysWithDepth.map {
-                val newState = MState(node.keys + it.first.second, node.pos.change(idx, it.first.first))
-                costCache.put(node to newState, it.second)
-                newState
-            }
-        }.flatten()
+                keysWithDepth.map {
+                    val newState = MState(node.keys + it.first.second, node.pos.change(idx, it.first.first))
+                    costCache.put(node to newState, it.second)
+                    newState
+                }
+            }.flatten()
 
 //        println("Looking at $node")
 //        r.forEach {
 //            println("${costCache[node to it]}-> $it")
 //        }
 
-        return r
+            return r
+        }
+
+        override fun cost(node1: MState, node2: MState): Int {
+            return costCache[node1 to node2]!!
+        }
     }
 
-    fun cost(node1: MState, node2: MState): Int {
-        return costCache[node1 to node2]!!
+    lateinit var stack: Stack<MState>
+
+    override fun part2(): Int? {
+        val map = mapPart2
+        val starts = area.allPoints().filter { map[it] == '@' }
+        val graph = defineGraphForRobotOrchestration(map)
+        val start = MState(emptySet(), starts.toList())
+        val result = graph.dijkstraSearch<MState>(start) { it.keys == allKeys }
+
+        stack = buildStack(result.first, result.second)
+
+        return result.second.first[result.first]
     }
 
     fun <T> List<T>.change(idx: Int, v: T): List<T> = toMutableList().apply { this[idx] = v }
 
-    val graph4 = object : Graph<State4> {
-        override fun neighborsOf(node: State4): Collection<State4> {
-            val r = node.pos.mapIndexed { idx, p ->
-                val single = State(p, node.keys)
-                val layers = graph.completeAcyclicTraverse(single)
-                val reachable =
-                    layers
-                        .map { it.second }.flatten().map { it.pos to map[it.pos] }
-                        .distinct().toList()
-
-                val keys = reachable.filter { it.second in 'a'..'z' && it.second !in node.keys }
-//                val blockedBy =
-//                    reachable.map { it.first.neighbors() }.flatten().distinct().map { it to map[it] }
-//                        .filter { it.second in 'A'..'Z' && it.second.toLowerCase() !in node.keys }
-//                println("$p -> blocked by: $blockedBy and can reach $keys")
-
-                keys.map { (pos, key) ->
-                    val solution = graph.breadthFirstSearch<State>(single) { it.pos == pos }
-
-                    State4(
-                        node.steps + solution.size - 1,
-                        node.pos.change(idx, pos),
-                        node.keys + solution.lastElement().keys
-                    )
-                }
-            }.flatten()
-            println(r)
-            return r
-            return node.pos.mapIndexedNotNull { idx, p ->
-                //ask if this robot can do anything!
-                val single = State(p, node.keys)
-
-                val reachable =
-                    graph.completeAcyclicTraverse(single).map { it.second.filter { map[it.pos] in 'a'..'z' } }
-                        .flatten()
-                        .toList()
-
-                val keys = reachable.map { map[it.pos] } - node.keys
-
-                if (keys.isEmpty())
-                    null
-                else
-                    p.neighbors()
-                        .filter {
-                            val c = map[it]
-                            c == '.' || c in 'a'..'z' || (c in 'A'..'Z' && c.toLowerCase() in node.keys)
-                        }.map {
-                            val c = map[it]
-                            State4(
-                                node.steps,
-                                node.pos.toMutableList().apply { this[idx] = it },
-                                node.keys + if (c in 'a'..'z') setOf(c) else emptySet()
-                            )
-                        }
-            }.flatten()
-        }
-    }
-
-    private val keysIn = allKeys.associateWith { key ->
-        val p = area.allPoints().filter { map[it] == key }.single()
-        when {
-            p.x < 40 && p.y < 40 -> 0
-            p.x > 40 && p.y < 40 -> 1
-            p.x < 40 && p.y > 40 -> 2
-            p.x > 40 && p.y > 40 -> 3
-            else -> error("")
-        }
-    }
-
     private val doorsIn = allKeys.map { it.toUpperCase() }.associateWith { key ->
-        val p = area.allPoints().filter { map[it] == key }.single()
+        val p = area.allPoints().filter { mapPart2[it] == key }.single()
         when {
             p.x < 40 && p.y < 40 -> 0
             p.x > 40 && p.y < 40 -> 1
@@ -177,11 +106,102 @@ class Day18(testData: List<String>? = null) : Day<String>(18, 2019, ::asStrings,
         }
     }
 
-    private val relevantKeysFor = (0..3).map { seg ->
-        doorsIn.filter { (door, idx) -> idx == seg }.map { it.key.toLowerCase() }.toSet()
+    private fun mutateMapForPart2(map: List<List<Char>>): List<List<Char>> {
+        val at = map.findFirst('@')!!
+        return map.mapIndexed { y, row ->
+            if (y == at.y - 1 || y == at.y + 1) {
+                row.toMutableList().apply {
+                    this[at.x - 1] = '@'
+                    this[at.x] = '#'
+                    this[at.x + 1] = '@'
+                }
+            } else if (y == at.y) {
+                row.toMutableList().apply {
+                    this[at.x - 1] = '#'
+                    this[at.x] = '#'
+                    this[at.x + 1] = '#'
+                }
+            } else
+                row
+        }
     }
 }
 
+class Day18Graphical(val d: Day18) : PixelGameEngine() {
+
+    val area = d.area
+    val map = d.mapPart2
+    val stack = d.stack
+    val graph = d.defineGraphForMap(map)
+
+    override fun onCreate() {
+        area.allPoints().forEach { (x, y) ->
+            when (map[x to y]) {
+                '#' -> draw(x, y, Color.WHITE)
+                '@' -> draw(x, y, Color.ORANGE)
+                in 'a'..'z' -> draw(x, y, Color.GREEN)
+                in 'A'..'Z' -> draw(x, y, Color.RED)
+            }
+        }
+    }
+
+    var pos = 0
+
+    var posInPath = 0
+    var currentPath: List<Point>? = null
+
+    override fun onUpdate(elapsedTime: Long) {
+        if (currentPath == null)
+            sleep(2000)
+        currentPath?.let { path ->
+            posInPath++
+            if (posInPath in 1..path.lastIndex) {
+                draw(path[posInPath - 1].x, path[posInPath - 1].y, Color.BLACK)
+                draw(path[posInPath].x, path[posInPath].y, Color.ORANGE)
+            } else
+                currentPath = null
+        }
+
+        if (currentPath == null) {
+            pos++
+            if (pos in 1..stack.lastIndex) {
+                val prevState = stack[pos - 1]
+                val state = stack[pos]
+
+                val moved = (0..3).first { prevState.pos[it] != state.pos[it] }
+                val from = prevState.pos[moved]
+                val to = state.pos[moved]
+
+                currentPath =
+                    graph.breadthFirstSearch(
+                        Day18.State(from, prevState.keys),
+                        Day18.State(to, state.keys)
+                    ).map { it.pos }
+                posInPath = 0
+            }
+        }
+        appName = "$pos/${stack.size} ($posInPath/${currentPath?.size ?: -1})"
+        sleep(20)
+    }
+
+}
+
+operator fun List<List<Char>>.get(p: Point) = this[p.y][p.x]
+
+fun List<List<Char>>.findFirst(c: Char): Point? {
+    for (y in indices) {
+        for (x in this[y].indices)
+            if (this[y][x] == c)
+                return x to y
+    }
+    return null
+}
+
 fun main() {
-    Day18().run()
+    val day18 = Day18()
+    day18.run()
+//    with(Day18Graphical(day18)) {
+//        construct(81, 81, 12, 12)
+//        start()
+//    }
 }
