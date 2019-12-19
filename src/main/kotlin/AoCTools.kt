@@ -14,29 +14,33 @@ abstract class Day<T>(
     open fun part1(): Any? = "TODO"
     open fun part2(): Any? = "TODO"
 
-    fun showInputHint() {
+    private fun maxWidth(l: String) =
+        if (l.length <= 50) l else
+            "${l.substring(0, 50)}... (${l.length} total)"
+
+    private fun showInputHint() {
         println("= INPUT ===================")
         input.take(5).forEachIndexed { idx, l ->
-            println("${idx + 1}: ${l.toString()}")
+            println("${idx + 1}: ${maxWidth(l.toString())}")
         }
-        if (input.size > 5) println("...${input.size} more...")
+        if (input.size > 5) println("... (${input.size} total)")
         println("===========================")
     }
 
-    inline fun runWithTiming(part: Int, f: () -> Any?) {
+    private inline fun runWithTiming(part: Int, f: () -> Any?) {
         var result: Any? = null
         val millis = measureTimeMillis { result = f() }
         val duration = if (millis < 1000) "$millis ms" else "${"%.3f".format(millis / 1000.0)} s"
         println("Solution $part: (took $duration)\n$result")
     }
 
-    fun run(one: Boolean = true, two: Boolean = true) {
+    fun run(vararg parts: Int = IntArray(2) { it + 1 }) {
         println("=== AoC $year, day $day ===")
         showInputHint()
 
-        if (one)
+        if (1 in parts)
             runWithTiming(1, ::part1)
-        if (two)
+        if (2 in parts)
             runWithTiming(2, ::part2)
     }
 }
