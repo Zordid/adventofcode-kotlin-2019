@@ -21,11 +21,14 @@ fun <N> Graph<N>.depthFirstSearch(start: N, destPredicate: (N) -> Boolean): Stac
 fun <N> Graph<N>.depthFirstSearch(start: N, dest: N): Stack<N> =
     depthFirstSearch(start, ::neighborsOf, { it == dest })
 
-fun <N> Graph<N>.completeAcyclicTraverse(start: N) =
-    SearchEngineWithNodes(::neighborsOf).completeAcyclicTraverse(start)
+fun <N> Graph<N>.completeAcyclicTraverse(start: N, safeMode: Boolean = true): Sequence<Set<N>> =
+    SearchEngineWithNodes(::neighborsOf).completeAcyclicTraverse(start, safeMode)
 
-fun <N> Graph<N>.AStarSearch(start: N, dest: N, c: (N, N) -> Int, cEstimation: (N, N) -> Int) =
-    buildStack(dest, AStar(::neighborsOf, c, cEstimation).search(start, dest))
+fun <N> Graph<N>.completeBreadthFirstTraverse(start: N): Sequence<Set<N>> =
+    SearchEngineWithNodes(::neighborsOf).completeBreadthFirstTraverse(start)
+
+fun <N> Graph<N>.AStarSearch(start: N, dest: N) =
+    buildStack(dest, AStar(::neighborsOf, ::cost, ::costEstimation).search(start, dest))
 
 fun <N> Graph<N>.dijkstraSearch(start: N, dest: N) =
     Dijkstra<N>(::neighborsOf, ::cost).search(start, { it == dest })

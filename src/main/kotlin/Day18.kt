@@ -8,7 +8,7 @@ class Day18(testData: List<String>? = null) : Day<String>(18, 2019, ::asStrings,
     val mapPart2 = mutateMapForPart2(mapPart1)
 
     val area = origin to (mapPart1[0].size - 1 to mapPart1.size - 1)
-    val allKeys = area.allPoints().filter { mapPart1[it] in 'a'..'z' }.map { mapPart1[it] }.toSet()
+    val allKeys = area.allPoints().filter { mapPart1[it] in 'a'..'z' }.map { mapPart1[it]!! }.toSet()
 
     data class State(val pos: Point, val keys: Set<Char>)
 
@@ -33,35 +33,55 @@ class Day18(testData: List<String>? = null) : Day<String>(18, 2019, ::asStrings,
     data class MState(val keys: Set<Char>, val pos: List<Point>)
 
     fun defineGraphForRobotOrchestration(map: List<List<Char>>) = object : Graph<MState> {
-        private val graph = defineGraphForMap(map)
+        private fun createLocalStaticSearchGraph(keys: Set<Char>) = object : Graph<Point> {
+            override fun neighborsOf(node: Point): Collection<Point> {
+                return node.neighbors().filter {
+                    val c = map[it.y][it.x]
+                    c == '.' || c == '@' || c in 'a'..'z' || (c in 'A'..'Z' && c.toLowerCase() in keys)
+                }
+            }
+        }
         private val costCache = mutableMapOf<Pair<MState, MState>, Int>()
         private val keysWithDepthCache = Array(4) {
-            mutableMapOf<State, List<Pair<Pair<Point, Char>, Int>>>()
+            mutableMapOf<State, Map<Char, Int>>()
         }
         private val relevantKeysFor = (0..3).map { seg ->
-            doorsIn.filter { (door, idx) -> idx == seg }.map { it.key.toLowerCase() }.toSet()
+            doorToQuadrant.filter { (door, idx) -> idx == seg }.map { it.key.toLowerCase() }.toSet()
+        }
+        private val keysIn = (0..3).map { seg ->
+            keyToQuadrant.filter { (key, idx) -> idx == seg }.map { it.key }.toSet()
+        }
+        private val keyPos = allKeys.associateWith { map.findFirst(it)!! }
+
+        private fun calculateReachableKeysWithDepth(
+            idx: Int,
+            state: State,
+            keys: Set<Char>
+        ): Map<Char, Int> {
+            val keysMissing = (keysIn[idx] - keys).toMutableSet()
+            val graph = createLocalStaticSearchGraph(state.keys)
+            val layers = graph.completeBreadthFirstTraverse(state.pos).withIndex()
+                .map { (level, layer) ->
+                    level to layer.mapNotNull { pos -> map[pos].let { if (it in keysMissing) it else null } }
+                }
+                .filter { it.second.isNotEmpty() }
+                .takeWhile { keysMissing.isNotEmpty() }
+                .onEach { keysMissing -= it.second }
+                .toList()
+            val reachableKeys = layers.map { it.second }.flatten()
+
+            return reachableKeys.associateWith { key -> layers.first { key in it.second }.first }
         }
 
         override fun neighborsOf(node: MState): Collection<MState> {
             val r = node.pos.mapIndexed { idx, p ->
-                val single = State(p, node.keys intersect relevantKeysFor[idx])
-                val keysWithDepth = keysWithDepthCache[idx].getOrPut(single) {
-                    val layers = graph.completeAcyclicTraverse(single)
-                    val reachableKeys =
-                        layers
-                            .map { it.second }.flatten().map { it.pos to map[it.pos] }
-                            .filter { it.second in 'a'..'z' && it.second !in node.keys }
-                            .distinct().toList()
-
-                    reachableKeys.map { k: Pair<Point, Char> ->
-                        k to layers.first { l: Pair<Int, Set<State>> ->
-                            k.second in l.second.flatMap { s -> s.keys }
-                        }.let { it.first }
-                    }
+                val singleRobot = State(p, node.keys intersect relevantKeysFor[idx])
+                val keysWithDepth = keysWithDepthCache[idx].getOrPut(singleRobot) {
+                    calculateReachableKeysWithDepth(idx, singleRobot, node.keys)
                 }
                 keysWithDepth.map {
-                    val newState = MState(node.keys + it.first.second, node.pos.change(idx, it.first.first))
-                    costCache.put(node to newState, it.second)
+                    val newState = MState(node.keys + it.key, node.pos.change(idx, keyPos.getValue(it.key)))
+                    costCache[node to newState] = it.value
                     newState
                 }
             }.flatten()
@@ -95,7 +115,10 @@ class Day18(testData: List<String>? = null) : Day<String>(18, 2019, ::asStrings,
 
     fun <T> List<T>.change(idx: Int, v: T): List<T> = toMutableList().apply { this[idx] = v }
 
-    private val doorsIn = allKeys.map { it.toUpperCase() }.associateWith { key ->
+    private val doorToQuadrant = allKeys.map { it.toUpperCase() }.associateWithQuadrant()
+    private val keyToQuadrant = allKeys.associateWithQuadrant()
+
+    private fun Iterable<Char>.associateWithQuadrant() = associateWith { key ->
         val p = area.allPoints().filter { mapPart2[it] == key }.single()
         when {
             p.x < 40 && p.y < 40 -> 0
@@ -185,8 +208,6 @@ class Day18Graphical(val d: Day18) : PixelGameEngine() {
     }
 
 }
-
-operator fun List<List<Char>>.get(p: Point) = this[p.y][p.x]
 
 fun List<List<Char>>.findFirst(c: Char): Point? {
     for (y in indices) {

@@ -25,7 +25,7 @@ class Day15Graphical : PixelGameEngine() {
         }
     }
 
-    var levels: List<Pair<Int, Set<Point>>>? = null
+    var levels: List<Set<Point>>? = null
     var onLevel = 0
 
     override fun onUpdate(elapsedTime: Long) {
@@ -42,7 +42,7 @@ class Day15Graphical : PixelGameEngine() {
             }
             levels?.let {
                 if (onLevel <= it.lastIndex)
-                    showOxygen(onLevel, it[onLevel].second)
+                    showOxygen(onLevel, it[onLevel])
                 onLevel++
             }
             sleep(25)

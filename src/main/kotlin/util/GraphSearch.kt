@@ -109,10 +109,10 @@ open class SearchEngineWithEdges<N, E>(
                 return null
             val nodesOnNextLevel = mutableSetOf<N>()
             nodesOnLevel.forEach { currentNode ->
-                nodesVisited.add(currentNode)
+                nodesVisited += currentNode
                 edgesOfNode(currentNode).forEach { edge ->
                     val node = walkEdge(currentNode, edge)
-                    if (!nodesVisited.contains(node) && !nodesOnLevel.contains(node)) {
+                    if (node !in nodesVisited && node !in nodesOnLevel) {
                         nodesDiscoveredThrough[node] = currentNode
                         if (isSolution(node))
                             return node
@@ -188,23 +188,46 @@ open class SearchEngineWithEdges<N, E>(
         return DepthSearch(startNode, isSolution).search()
     }
 
-    fun completeAcyclicTraverse(startNode: N): Sequence<Pair<Int, Set<N>>> =
+    fun completeBreadthFirstTraverse(startNode: N): Sequence<Set<N>> =
         sequence {
-            var nodesOnPreviousLevel: Set<N>
+            val nodesVisited = mutableSetOf<N>()
             var nodesOnLevel = setOf<N>()
             var nodesOnNextLevel = setOf(startNode)
-            var level = 0
             while (nodesOnNextLevel.isNotEmpty()) {
+                nodesVisited.addAll(nodesOnLevel)
+                nodesOnLevel = nodesOnNextLevel
+                yield(nodesOnLevel)
+                nodesOnNextLevel = mutableSetOf()
+                nodesOnLevel.forEach { node ->
+                    nodesOnNextLevel.addAll(edgesOfNode(node).map { e -> walkEdge(node, e) }
+                        .filter { neighbor -> neighbor !in nodesVisited })
+                }
+            }
+        }
+
+    fun completeAcyclicTraverse(startNode: N, safeMode: Boolean = true): Sequence<Set<N>> =
+        sequence {
+            val nodesVisited = mutableSetOf<N>()
+            var nodesOnPreviousLevel = emptySet<N>()
+            var nodesOnLevel = setOf<N>()
+            var nodesOnNextLevel = setOf(startNode)
+            while (nodesOnNextLevel.isNotEmpty()) {
+                if (safeMode)
+                    nodesVisited.addAll(nodesOnPreviousLevel)
                 nodesOnPreviousLevel = nodesOnLevel
                 nodesOnLevel = nodesOnNextLevel
-                yield(level++ to nodesOnLevel)
+                yield(nodesOnLevel)
                 nodesOnNextLevel = mutableSetOf()
                 nodesOnLevel.forEach { node ->
                     nodesOnNextLevel.addAll(edgesOfNode(node).map { e -> walkEdge(node, e) }
                         .filter { neighbor ->
-                            !nodesOnPreviousLevel.contains(neighbor) &&
-                                    !nodesOnLevel.contains(neighbor)
-                        })
+                            if (safeMode && neighbor in nodesVisited)
+                                error("This graph is not acyclic. Acyclic Traverse impossible.\nNode $node has neighbor $neighbor.")
+                            if (neighbor in nodesOnLevel)
+                                println("Warning. Could be a cyclic graph. Neighbor node is on same level!")
+                            neighbor !in nodesOnPreviousLevel && neighbor !in nodesOnLevel
+                        }
+                    )
                 }
             }
         }
@@ -240,3 +263,4 @@ fun loggingDebugger(level: Int, nodesOnLevel: Collection<Any>, nodesVisited: Col
     println("I am on level $level, searching through ${nodesOnLevel.size}. Visited so far: ${nodesVisited.size}")
     return false
 }
+

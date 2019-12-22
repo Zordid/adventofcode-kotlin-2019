@@ -51,15 +51,22 @@ fun Point.left(steps: Int = 1) = x - steps to y
 fun Point.up(steps: Int = 1) = x to y - steps
 fun Point.down(steps: Int = 1) = x to y + steps
 
-fun Point.neighbor(direction: Direction) = this + direction.vector
+fun Point.neighbor(direction: Direction, steps: Int = 1) = this + (direction.vector * steps)
 fun Point.neighbors() = Direction.values().map { neighbor(it) }
 
 val origin = 0 to 0
 
 infix operator fun Point.plus(other: Point) = x + other.x to y + other.y
 infix operator fun Point.minus(other: Point) = x - other.x to y - other.y
-infix operator fun Point.times(factor: Int) = x * factor to y * factor
-infix operator fun Point.div(factor: Int) = x / factor to y / factor
+infix operator fun Point.times(factor: Int) = when (factor) {
+    0 -> origin
+    1 -> this
+    else -> x * factor to y * factor
+}
+infix operator fun Point.div(factor: Int) = when (factor) {
+    1 -> this
+    else -> x / factor to y / factor
+}
 
 operator fun Point.compareTo(other: Point): Int = if (y == other.y) x.compareTo(other.x) else y.compareTo(other.y)
 
@@ -76,6 +83,8 @@ fun allPointsInArea(from: Point, to: Point): Sequence<Point> {
 
 fun Area.allPoints() = allPointsInArea(first, second)
 
+operator fun Area.contains(p: Point) = p.x in first.x..second.x && p.y in first.y..second.y
+
 val Area.width: Int
     get() = (second.x - first.x).absoluteValue + 1
 
@@ -89,6 +98,9 @@ fun Iterable<Point>.boundingBox(): Pair<Point, Point> {
     val maxY = maxBy { it.y }?.y!!
     return (minX to minY) to (maxX to maxY)
 }
+
+operator fun <T> List<List<T>>.get(p: Point): T? =
+    if (p.y in indices && p.x in this[p.y].indices) this[p.y][p.x] else null
 
 fun <T> List<List<T>>.matchingIndexes(predicate: (T) -> Boolean): List<Point> =
     mapIndexed { y, l -> l.mapIndexedNotNull { x, item -> if (predicate(item)) x to y else null } }.flatten()
@@ -118,3 +130,4 @@ fun <R, T> Sequence<T>.scan(seed: R, transform: (a: R, b: T) -> R): Sequence<R> 
     }
 }
 
+fun <K, V> Map<K, V>.flip(): Map<V, K> = map { it.value to it.key }.toMap()

@@ -77,6 +77,11 @@ class LongMemory : Memory<Long> {
 
 }
 
+fun byValues(vararg values: Long): suspend () -> Long =
+    values.iterator().let {
+        { it.nextLong() }
+    }
+fun byCapturing(outputs: MutableList<Long>): suspend (Long) -> Unit = { outputs.add(it) }
 fun byInChannel(channel: Channel<Long>): suspend () -> Long = { channel.receive() }
 fun byOutChannel(channel: Channel<Long>): suspend (Long) -> Unit = { v: Long -> channel.send(v) }
 

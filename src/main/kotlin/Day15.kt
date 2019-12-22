@@ -88,6 +88,9 @@ class RobotControl(program: IntcodeProgram) {
     val knownGraph = object : Graph<Point> {
         override fun neighborsOf(node: Point): Collection<Point> =
             node.neighbors().filter { knownMap[it] == AreaType.FLOOR }
+
+        override fun cost(from: Point, to: Point) = 1
+        override fun costEstimation(from: Point, to: Point) = from manhattanDistanceTo to
     }
 
     val unknownGraph = object : Graph<Point> {
@@ -99,11 +102,14 @@ class RobotControl(program: IntcodeProgram) {
                 }
             return node.neighbors().filter { knownMap[it] == AreaType.FLOOR }
         }
+
+        override fun cost(from: Point, to: Point) = 1
+        override fun costEstimation(from: Point, to: Point) = from manhattanDistanceTo to
     }
 
     private suspend fun safeDriveTo(p: Point) {
         if (p == currentPosition) return
-        val path = knownGraph.AStarSearch(currentPosition, p, { _, _ -> 1 }, { a, b -> a manhattanDistanceTo b })
+        val path = knownGraph.AStarSearch(currentPosition, p)
         path.forEach { newPos ->
             require(
                 when (newPos) {
@@ -129,12 +135,7 @@ class Day15(testData: String? = null) : Day<String>(15, 2019, ::asStrings, testD
         val explorer = GlobalScope.launch { explore() }
         explorer.join()
         robot.printStatus()
-        val solution =
-            robot.unknownGraph.AStarSearch(
-                robot.targetPosition!!,
-                origin,
-                { _, _ -> 1 },
-                { a, b -> a manhattanDistanceTo b })
+        val solution = robot.unknownGraph.AStarSearch(robot.targetPosition!!, origin)
         return solution.size - 1
     }
 
@@ -165,8 +166,8 @@ class Day15(testData: String? = null) : Day<String>(15, 2019, ::asStrings, testD
     override fun part2(): Int {
         if (robot.targetPosition == null)
             part1()
-        val levels = robot.unknownGraph.completeAcyclicTraverse(robot.targetPosition!!).toList()
-        return levels.size - 1
+        val levels = robot.unknownGraph.completeAcyclicTraverse(robot.targetPosition!!, false).count()
+        return levels - 1
     }
 
 }

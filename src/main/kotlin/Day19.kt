@@ -1,5 +1,4 @@
 import com.marcinmoskala.math.pow
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -42,27 +41,22 @@ class Day19(testData: List<String>? = null) : Day<String>(19, 2019, ::asStrings,
         var lower = origin
         var upper = origin
 
-        fun checkSync(p: Point): Boolean = runBlocking {
+        fun check(p: Point): Boolean {
             require(p.x >= 0 && p.y >= 0)
-            val inC = Channel<Long>(2)
-            val outC = Channel<Long>(0)
-            val ic = IntcodeComputer(program, byInChannel(inC), byOutChannel(outC))
-            val job = launch { ic.runAsync() }
-            inC.send(p.x.toLong())
-            inC.send(p.y.toLong())
-            val result = outC.receive() == 1L
-            job.cancelAndJoin()
-            result
+            val result = mutableListOf<Long>()
+            val ic = IntcodeComputer(program, byValues(p.x.toLong(), p.y.toLong()), byCapturing(result))
+            ic.run()
+            return result.first() == 1L
         }
 
         fun adjustByStart(startPoint: Point): Int {
             var (x, y) = startPoint
-            if (!checkSync(x to y)) {
+            if (!check(x to y)) {
                 do {
                     x++
-                } while (!checkSync(x to y))
+                } while (!check(x to y))
             } else {
-                while (checkSync(x - 1 to y)) {
+                while (check(x - 1 to y)) {
                     x--
                 }
             }
@@ -71,12 +65,12 @@ class Day19(testData: List<String>? = null) : Day<String>(19, 2019, ::asStrings,
 
         fun adjustByEnd(endPoint: Point): Int {
             var (x, y) = endPoint
-            if (!checkSync(x to y)) {
+            if (!check(x to y)) {
                 do {
                     x--
-                } while (!checkSync(x to y))
+                } while (!check(x to y))
             } else {
-                while (checkSync(x + 1 to y)) {
+                while (check(x + 1 to y)) {
                     x++
                 }
             }
