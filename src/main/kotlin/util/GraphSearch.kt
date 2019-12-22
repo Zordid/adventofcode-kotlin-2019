@@ -8,7 +8,7 @@ typealias SolutionPredicate<N> = (node: N) -> Boolean
 
 class AStar<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> Int, val costEstimation: (N, N) -> Int) {
 
-    fun search(startNode: N, destNode: N): Pair<Map<N, Int>, Map<N, N>> {
+    fun search(startNode: N, destNode: N): Solution<N> {
         val dist = mutableMapOf<N, Int>()
         val prev = mutableMapOf<N, N>()
         val openList = MinPriorityQueueImpl<N>()
@@ -40,19 +40,31 @@ class AStar<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> Int,
         do {
             val currentNode = openList.extractMin()
             if (currentNode == destNode)
-                return dist to prev
+                return Solution(currentNode, dist, prev)
 
             closedList.add(currentNode)
             expandNode(currentNode)
         } while (!openList.isEmpty())
 
-        return dist to prev
+        return Solution(null, dist, prev)
     }
+}
+
+fun <N> Solution<N>.buildStack(): Stack<N> {
+    val pathStack = Stack<N>()
+    if (previous.containsKey(found)) {
+        var nodeFoundThroughPrevious = found
+        while (nodeFoundThroughPrevious != null) {
+            pathStack.add(0, nodeFoundThroughPrevious)
+            nodeFoundThroughPrevious = previous[nodeFoundThroughPrevious]
+        }
+    }
+    return pathStack
 }
 
 fun <N> buildStack(destination: N?, result: Pair<Map<N, Int>, Map<N, N>>): Stack<N> {
     val pathStack = Stack<N>()
-    if (result.first.containsKey(destination)) {
+    if (result.second.containsKey(destination)) {
         var nodeFoundThroughPrevious = destination
         while (nodeFoundThroughPrevious != null) {
             pathStack.add(0, nodeFoundThroughPrevious)
@@ -62,9 +74,11 @@ fun <N> buildStack(destination: N?, result: Pair<Map<N, Int>, Map<N, N>>): Stack
     return pathStack
 }
 
+data class Solution<N>(val found: N?, val distances: Map<N, Int>, val previous: Map<N, N>)
+
 class Dijkstra<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> Int) {
 
-    fun search(startNode: N, predicate: SolutionPredicate<N>): Pair<N?, Pair<Map<N, Int>, Map<N, N>>> {
+    fun search(startNode: N, predicate: SolutionPredicate<N>): Solution<N> {
         val dist = mutableMapOf<N, Int>()
         val prev = mutableMapOf<N, N>()
 
@@ -75,7 +89,7 @@ class Dijkstra<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> I
         while (!queue.isEmpty()) {
             val u = queue.extractMin()
             if (predicate(u)) {
-                return u to (dist to prev)
+                return Solution(u, dist, prev)
             }
             for (v in neighborNodes(u)) {
                 val alt = dist[u]!! + cost(u, v)
@@ -87,7 +101,7 @@ class Dijkstra<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> I
             }
         }
 
-        return null to (dist to prev)
+        return Solution(null, dist, prev)
     }
 
 }

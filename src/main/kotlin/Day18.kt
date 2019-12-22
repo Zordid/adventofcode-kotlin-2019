@@ -108,9 +108,9 @@ class Day18(testData: List<String>? = null) : Day<String>(18, 2019, ::asStrings,
         val start = MState(emptySet(), starts.toList())
         val result = graph.dijkstraSearch<MState>(start) { it.keys == allKeys }
 
-        stack = buildStack(result.first, result.second)
+        stack = result.buildStack()
 
-        return result.second.first[result.first]
+        return result.distances[result.found]
     }
 
     fun <T> List<T>.change(idx: Int, v: T): List<T> = toMutableList().apply { this[idx] = v }

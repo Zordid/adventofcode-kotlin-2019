@@ -81,9 +81,23 @@ fun byValues(vararg values: Long): suspend () -> Long =
     values.iterator().let {
         { it.nextLong() }
     }
+
 fun byCapturing(outputs: MutableList<Long>): suspend (Long) -> Unit = { outputs.add(it) }
 fun byInChannel(channel: Channel<Long>): suspend () -> Long = { channel.receive() }
-fun byOutChannel(channel: Channel<Long>): suspend (Long) -> Unit = { v: Long -> channel.send(v) }
+fun byOutChannel(channel: Channel<Long>): suspend (Long) -> Unit = { channel.send(it) }
+
+fun byAsciiOutChannel(
+    channel: Channel<String>,
+    buffer: StringBuilder = StringBuilder()
+): suspend (Long) -> Unit = { v: Long ->
+    when (v) {
+        10L -> channel.send(buffer.toString()).also { buffer.clear() }
+        in 11..126 -> buffer.append(v.toChar())
+        else -> channel.send("$v")
+    }
+}
+
+
 
 class IntcodeComputer(
     private val program: List<Long> = emptyList(),

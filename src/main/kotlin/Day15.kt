@@ -5,6 +5,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import util.AStarSearch
 import util.Graph
+import util.buildStack
 import util.completeAcyclicTraverse
 
 enum class AreaType { WALL, FLOOR }
@@ -109,7 +110,7 @@ class RobotControl(program: IntcodeProgram) {
 
     private suspend fun safeDriveTo(p: Point) {
         if (p == currentPosition) return
-        val path = knownGraph.AStarSearch(currentPosition, p)
+        val path = knownGraph.AStarSearch(currentPosition, p).buildStack()
         path.forEach { newPos ->
             require(
                 when (newPos) {
@@ -135,7 +136,7 @@ class Day15(testData: String? = null) : Day<String>(15, 2019, ::asStrings, testD
         val explorer = GlobalScope.launch { explore() }
         explorer.join()
         robot.printStatus()
-        val solution = robot.unknownGraph.AStarSearch(robot.targetPosition!!, origin)
+        val solution = robot.unknownGraph.AStarSearch(robot.targetPosition!!, origin).buildStack()
         return solution.size - 1
     }
 

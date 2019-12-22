@@ -27,11 +27,12 @@ fun <N> Graph<N>.completeAcyclicTraverse(start: N, safeMode: Boolean = true): Se
 fun <N> Graph<N>.completeBreadthFirstTraverse(start: N): Sequence<Set<N>> =
     SearchEngineWithNodes(::neighborsOf).completeBreadthFirstTraverse(start)
 
-fun <N> Graph<N>.AStarSearch(start: N, dest: N) =
-    buildStack(dest, AStar(::neighborsOf, ::cost, ::costEstimation).search(start, dest))
+fun <N> Graph<N>.AStarSearch(start: N, dest: N): Solution<N> =
+    AStar(::neighborsOf, ::cost, ::costEstimation).search(start, dest)
 
-fun <N> Graph<N>.dijkstraSearch(start: N, dest: N) =
-    Dijkstra<N>(::neighborsOf, ::cost).search(start, { it == dest })
+fun <N> Graph<N>.dijkstraSearch(start: N, dest: N): Solution<N> =
+    Dijkstra(::neighborsOf, ::cost).search(start, { it == dest })
 
-fun <N> Graph<N>.dijkstraSearch(start: N, destPredicate: (N) -> Boolean) =
-    Dijkstra<N>(::neighborsOf, ::cost).search(start, destPredicate)
+fun <N> Graph<N>.dijkstraSearch(start: N, destPredicate: (N) -> Boolean): Solution<N> =
+    Dijkstra(::neighborsOf, ::cost).search(start, destPredicate)
+

@@ -1,6 +1,7 @@
 import util.AStarSearch
 import util.Graph
 import util.breadthFirstSearch
+import util.buildStack
 import kotlin.math.absoluteValue
 
 class Day20(testData: List<String>? = null) : Day<String>(20, 2019, ::asStrings, testData) {
@@ -90,7 +91,7 @@ class Day20(testData: List<String>? = null) : Day<String>(20, 2019, ::asStrings,
         val start = RecursivePosition(0, start)
         val end = RecursivePosition(0, end)
 
-        val solution = graph.AStarSearch(start, end)
+        val solution = graph.AStarSearch(start, end).buildStack()
         return solution.size - 1
     }
 
