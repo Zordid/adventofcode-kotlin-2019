@@ -216,10 +216,10 @@ abstract class PixelGameEngine {
 
     @JvmOverloads
     fun drawRect(x: Int, y: Int, width: Int, height: Int, color: Color = Color.WHITE, pattern: Long = 0xFFFFFFFF) {
-        drawLine(x, y, x + width - 1, y, color, pattern);
-        drawLine(x + width - 1, y, x + width - 1, y + height - 1, color, pattern);
-        drawLine(x + width - 1, y + height - 1, x, y + height - 1, color, pattern);
-        drawLine(x, y + height - 1, x, y, color, pattern);
+        drawLine(x, y, x + width - 1, y, color, pattern)
+        drawLine(x + width - 1, y, x + width - 1, y + height - 1, color, pattern)
+        drawLine(x + width - 1, y + height - 1, x, y + height - 1, color, pattern)
+        drawLine(x, y + height - 1, x, y, color, pattern)
     }
 
     @JvmOverloads
@@ -232,7 +232,7 @@ abstract class PixelGameEngine {
         if (x1 < 0) x1 = 0
         if (x1 >= screenWidth) x1 = screenWidth
         if (y1 < 0) y1 = 0
-        if (y1 >= screenHeight) y1 = screenHeight;
+        if (y1 >= screenHeight) y1 = screenHeight
 
         if (x2 < 0) x2 = 0
         if (x2 >= screenWidth) x2 = screenWidth
@@ -253,17 +253,17 @@ abstract class PixelGameEngine {
 
         while (y0 >= x0) {
             if (mask and 0x01 != 0) draw(x + x0, y - y0, color)
-            if (mask and 0x02 != 0) draw(x + y0, y - x0, color);
-            if (mask and 0x04 != 0) draw(x + y0, y + x0, color);
-            if (mask and 0x08 != 0) draw(x + x0, y + y0, color);
-            if (mask and 0x10 != 0) draw(x - x0, y + y0, color);
-            if (mask and 0x20 != 0) draw(x - y0, y + x0, color);
-            if (mask and 0x40 != 0) draw(x - y0, y - x0, color);
-            if (mask and 0x80 != 0) draw(x - x0, y - y0, color);
+            if (mask and 0x02 != 0) draw(x + y0, y - x0, color)
+            if (mask and 0x04 != 0) draw(x + y0, y + x0, color)
+            if (mask and 0x08 != 0) draw(x + x0, y + y0, color)
+            if (mask and 0x10 != 0) draw(x - x0, y + y0, color)
+            if (mask and 0x20 != 0) draw(x - y0, y + x0, color)
+            if (mask and 0x40 != 0) draw(x - y0, y - x0, color)
+            if (mask and 0x80 != 0) draw(x - x0, y - y0, color)
             d += if (d < 0)
-                4 * x0++ + 6;
+                4 * x0++ + 6
             else
-                4 * (x0++ - y0--) + 10;
+                4 * (x0++ - y0--) + 10
         }
     }
 
@@ -271,7 +271,7 @@ abstract class PixelGameEngine {
     fun fillCircle(x: Int, y: Int, radius: Int, color: Color = Color.WHITE) {
         var x0 = 0
         var y0 = radius
-        var d = 3 - 2 * radius;
+        var d = 3 - 2 * radius
         if (radius == 0) return
 
         fun drawLine(sx: Int, ex: Int, ny: Int) {
@@ -280,10 +280,10 @@ abstract class PixelGameEngine {
 
         while (y0 >= x0) {
             // Modified to draw scan-lines instead of edges
-            drawLine(x - x0, x + x0, y - y0);
-            drawLine(x - y0, x + y0, y - x0);
-            drawLine(x - x0, x + x0, y + y0);
-            drawLine(x - y0, x + y0, y + x0);
+            drawLine(x - x0, x + x0, y - y0)
+            drawLine(x - y0, x + y0, y - x0)
+            drawLine(x - x0, x + x0, y + y0)
+            drawLine(x - y0, x + y0, y + x0)
             d += if (d < 0)
                 4 * x0++ + 6
             else

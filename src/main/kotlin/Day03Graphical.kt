@@ -23,8 +23,8 @@ class Day03Game : PixelGameEngine() {
             'D' -> c.down(steps)
             else -> error("unknown direction $direction")
         }
-        points += c
-        points
+        //points += c
+        points + c
     }
 
     var midpoint = 0 to 0
