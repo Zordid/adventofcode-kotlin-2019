@@ -16,7 +16,7 @@ class Arcade : PixelGameEngine() {
     override fun onCreate() {
         recorder.takeWhile { !it.startsWith("joystick") }.forEach {
             if (it.startsWith("score")) {
-                appName = it
+                appInfo = it
             } else {
                 val (x, y, t) = it.split(", ").map { it.toInt() }
                 visualize(x, y, t)
@@ -39,14 +39,14 @@ class Arcade : PixelGameEngine() {
         draw(x, y, color)
     }
 
-    override fun onUpdate(elapsedTime: Long) {
+    override fun onUpdate(elapsedTime: Long, frame: Long) {
         if (gamePlay.hasNext()) {
             val next = gamePlay.next()
             when {
                 next.startsWith("joystick") -> {
                 }
 
-                next.startsWith("score") -> appName = next
+                next.startsWith("score") -> appInfo = next
                 else -> {
                     val (x, y, t) = next.split(", ").map { it.toInt() }
                     visualize(x, y, t)

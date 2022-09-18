@@ -177,7 +177,7 @@ class Day18Graphical(val d: Day18) : PixelGameEngine() {
     var posInPath = 0
     var currentPath: List<Point>? = null
 
-    override fun onUpdate(elapsedTime: Long) {
+    override fun onUpdate(elapsedTime: Long, frame: Long) {
         if (currentPath == null)
             sleep(2000)
         currentPath?.let { path ->
@@ -207,7 +207,7 @@ class Day18Graphical(val d: Day18) : PixelGameEngine() {
                 posInPath = 0
             }
         }
-        appName = "$pos/${stack.size} ($posInPath/${currentPath?.size ?: -1})"
+        appInfo = "$pos/${stack.size} ($posInPath/${currentPath?.size ?: -1})"
         sleep(20)
     }
 

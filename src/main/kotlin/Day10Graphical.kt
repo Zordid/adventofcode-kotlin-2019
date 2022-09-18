@@ -50,7 +50,7 @@ class Day10Graphical(day10: Day10) : PixelGameEngine() {
         //drawAsteroid(best, Color.GREEN)
     }
 
-    override fun onUpdate(elapsedTime: Long) {
+    override fun onUpdate(elapsedTime: Long, frame: Long) {
         phase(1.seconds..3.seconds) { f, max ->
             val colorFadingOut = colorTransition(middleGray, Color(60, 60, 60), f.toFloat() / max)
             val colorFadingIn = colorTransition(middleGray, Color.WHITE, f.toFloat() / max)

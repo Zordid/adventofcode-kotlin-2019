@@ -32,8 +32,6 @@ class Day03Game : PixelGameEngine() {
 
     override fun onCreate() {
         day03.run()
-        appName = "AoC 2019 Day 3: Crossed Wires"
-
         midpoint = screenWidth / 2 to screenHeight / 2
 
         drawLine(0, midpoint.second, screenWidth, midpoint.second, Color.BLUE)
@@ -68,7 +66,7 @@ class Day03Game : PixelGameEngine() {
 
 fun main() {
     with(Day03Game()) {
-        construct(1000, 1000, 1, 1)
+        construct(1000, 1000, 1, 1, "AoC 2019 Day 3: Crossed Wires")
         start()
     }
 }

@@ -10,12 +10,11 @@ class SIFVisualizer(image: String) : PixelGameEngine() {
     var layer = 0
 
     override fun onCreate() {
-        appName = "SIF"
         width = screenWidth
         height = screenHeight
     }
 
-    override fun onUpdate(elapsedTime: Long) {
+    override fun onUpdate(elapsedTime: Long, frame: Long) {
         if (layer in layers.indices)
             for (y in 0 until height) {
                 for (x in 0 until width) {
@@ -37,7 +36,7 @@ class SIFVisualizer(image: String) : PixelGameEngine() {
 
 fun main() {
     with(SIFVisualizer(getInputAsString(8, 2019))) {
-        construct(25, 6, 32, 32)
+        construct(25, 6, 32, 32, "SIF")
         start()
     }
 }

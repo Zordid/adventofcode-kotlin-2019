@@ -8,6 +8,7 @@ import javax.swing.JFrame
 import javax.swing.JPanel
 import javax.swing.WindowConstants
 import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
 import kotlin.system.measureTimeMillis
 
 /**
@@ -42,7 +43,14 @@ abstract class PixelGameEngine {
 
     }
 
-    var appName = "untitled"
+    private var appName = ""
+    var limitFps: Int? = null
+        set(value) {
+            field = value
+            millisPerFrame = value?.let { (1000.0 / it).toLong() }
+        }
+    private var millisPerFrame: Long? = null
+    var appInfo = ""
     lateinit var frame: JFrame
     var screenWidth = 0
         private set
@@ -53,19 +61,26 @@ abstract class PixelGameEngine {
     private lateinit var buffer: Array<Color>
     private lateinit var panel: GamePanel
 
-    fun construct(screenWidth: Int, screenHeight: Int, pixelWidth: Int, pixelHeight: Int) {
+    fun construct(
+        screenWidth: Int,
+        screenHeight: Int,
+        pixelWidth: Int,
+        pixelHeight: Int,
+        appName: String = "PixelGameEngine",
+    ) {
         require(screenWidth > 0 && screenHeight > 0) { "Unsupported dimensions: $screenWidth x $screenHeight" }
-        require(pixelWidth > 0 && pixelWidth > 0) { "Unsupported pixel dimensions: $pixelWidth x $pixelHeight" }
+        require(pixelWidth > 0 && pixelHeight > 0) { "Unsupported pixel dimensions: $pixelWidth x $pixelHeight" }
 
         this.screenWidth = screenWidth
         this.screenHeight = screenHeight
         buffer = Array(screenWidth * screenHeight) { Color.BLACK }
         displayBuffer = buffer
 
+        this.appName = appName
         panel = GamePanel(pixelWidth, pixelHeight)
         frame = JFrame()
         with(frame) {
-            title = "PixelGameEngine - $appName"
+            updateTitle("initialized")
             defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
             isResizable = false
             pack()
@@ -83,25 +98,43 @@ abstract class PixelGameEngine {
         }
     }
 
+    private var halted = false
+    var hold = 0L
+
+    open fun isActive() = true
+
     fun start() {
         onCreate()
         panel.repaint()
         val startTime = System.currentTimeMillis()
-        while (true) {
-            val time = measureTimeMillis {
-                onUpdate(System.currentTimeMillis() - startTime)
+        var frame = 0L
+        while (!halted && isActive()) {
+            var time = measureTimeMillis {
+                onUpdate(System.currentTimeMillis() - startTime, frame++)
                 displayBuffer = buffer
                 buffer = buffer.copyOf()
                 panel.repaint()
+                if (hold > 0L) {
+                    sleep(hold)
+                    hold = 0L
+                }
+            }
+            millisPerFrame?.let {
+                val sleepTime = (it - time).coerceAtLeast(0)
+                sleep(sleepTime)
+                time += sleepTime
             }
             updateTitle(1000.0 / time)
         }
+        onStop(System.currentTimeMillis() - startTime, frame - 1)
+        updateTitle("stopped")
+        while (true) sleep(1000)
     }
 
     /**
      * Draws a pixel on the screen in the defined color.
      * @param x the x coordinate
-     * @param y the util.getY coordinate
+     * @param y the y coordinate
      * @param color the color to draw
      */
     @JvmOverloads
@@ -116,9 +149,9 @@ abstract class PixelGameEngine {
      * Draws a line on the screen in the defined color using the given pattern.
      *
      * @param x1 start x coordinate
-     * @param y1 start util.getY coordinate
+     * @param y1 start y coordinate
      * @param x2 end x coordinate
-     * @param y2 end util.getY coordinate
+     * @param y2 end y coordinate
      * @param color the color to use
      * @param pattern the pattern to use
      */
@@ -176,7 +209,7 @@ abstract class PixelGameEngine {
             }
 
             if (rol()) draw(x, y, color)
-            for (i in 0 until xe) {
+            while (x < xe) {
                 x += 1
                 if (px < 0)
                     px += 2 * dy1
@@ -201,7 +234,7 @@ abstract class PixelGameEngine {
             }
 
             if (rol()) draw(x, y, color)
-            for (i in 0 until ye) {
+            while (y < ye) {
                 y += 1
                 if (py < 0)
                     py += 2 * dx1
@@ -299,10 +332,20 @@ abstract class PixelGameEngine {
      */
     fun sleep(millis: Long) = Thread.sleep(millis)
 
+    fun hold(millis: Long) {
+        hold = millis
+    }
+
+    fun stop() {
+        halted = true
+    }
+
     /**
      * Will be called from the game engine right before the endless game loop. Can be used to initialize things.
      */
-    open fun onCreate() {}
+    open fun onCreate() {
+        // nop
+    }
 
     /**
      * Will be called once per game loop to update the screen. Use the supplied methods to interact with the screen.
@@ -314,12 +357,32 @@ abstract class PixelGameEngine {
      * @see fillCircle
      * @see sleep
      */
-    open fun onUpdate(elapsedTime: Long) {
+    open fun onUpdate(elapsedTime: Long, frame: Long) {
         sleep(1000)
     }
 
+    open fun onStop(elapsedTime: Long, frame: Long) {
+        // nop
+    }
+
     private fun updateTitle(fps: Double) {
-        frame.title = "PixelGameEngine - $appName - ${"%.1f".format(fps)} fps"
+        frame.title = "$appName - $appInfo - ${"%.1f".format(fps)} fps"
+    }
+
+    private fun updateTitle(state: String) {
+        frame.title = "$appName - $appInfo - $state"
+    }
+
+    companion object {
+        fun gradientColor(from: Color, to: Color, percent: Float): Color {
+            val resultRed: Float = from.red + percent * (to.red - from.red)
+            val resultGreen: Float = from.green + percent * (to.green - from.green)
+            val resultBlue: Float = from.blue + percent * (to.blue - from.blue)
+            return Color(resultRed.roundToInt(), resultGreen.roundToInt(), resultBlue.roundToInt())
+        }
+
+        fun createGradient(from: Color, to: Color, steps: Int): List<Color> =
+            (0 until steps).map { gradientColor(from, to, it / (steps - 1).toFloat()) }
     }
 
 }

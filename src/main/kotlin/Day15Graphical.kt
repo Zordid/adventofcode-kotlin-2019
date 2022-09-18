@@ -26,7 +26,7 @@ class Day15Graphical : PixelGameEngine() {
     var levels: List<Set<Point>>? = null
     var onLevel = 0
 
-    override fun onUpdate(elapsedTime: Long) {
+    override fun onUpdate(elapsedTime: Long, frame: Long) {
         if (p1Job.isActive) {
             showMap()
             runBlocking { debugChannel.trySend(true).isSuccess }
@@ -34,7 +34,7 @@ class Day15Graphical : PixelGameEngine() {
         } else {
             if (levels == null) {
                 showMap()
-                appName = "done searching target"
+                appInfo = "done searching target"
                 levels = day15.robot.knownGraph.completeAcyclicTraverse(day15.robot.targetPosition!!).toList()
                 println("Now flooding with oxygen in ${levels?.size} levels!")
             }

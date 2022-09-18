@@ -276,7 +276,7 @@ class SCDebugger(
             Type.PARAMETER -> Color.GREEN
         }
 
-    override fun onUpdate(elapsedTime: Long) {
+    override fun onUpdate(elapsedTime: Long, frame: Long) {
         if (computer.halt) {
             if (executedIp != 0L)
                 dump()
