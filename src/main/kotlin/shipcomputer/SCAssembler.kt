@@ -142,9 +142,7 @@ class SCAssembler(code: String) {
                     require(parameters.size == instruction.parameters) {
                         "Wrong amount of parameters for $mnemonic: need ${instruction.parameters}, have: ${parameters.size}"
                     }
-                    val modes = parameters.reversed().fold(0) { acc, s ->
-                        acc * 10 + if (s.isIndirectParameter()) 0 else 1
-                    }
+                    val modes = extractModes(parameters)
 
                     markers["@NEXT"] = address + 1 + instruction.parameters
                     val opcode = modes * 100 + instruction.opcode
@@ -191,6 +189,14 @@ class SCAssembler(code: String) {
         println("Created program: ${result.joinToString(",")}\n")
     }
 
+    private fun extractModes(parameters: List<String>): Int =
+        parameters.reversed().fold(0) { acc, s ->
+            acc * 10 + when {
+                s.isIndirectParameter() -> 0
+                else -> 1
+            }
+        }
+
     private fun evaluate(literal: String): Long {
         if (literal.isWrappedIn('\'', '\''))
             return literal.unwrap()[0].toLong()
@@ -215,7 +221,12 @@ class SCAssembler(code: String) {
         return line
     }
 
-    private fun String.isIndirectParameter() = isWrappedIn('[', ']')
+    private fun String.isIndirectParameter() =
+        isWrappedIn('[', ']') && (this[1] != '+' && this[1] != '-')
+
+    private fun String.isRelativeParameter() =
+        isWrappedIn('[', ']') && (this[1] == '+' || this[1] == '-')
+
 
     private fun String.isWrappedIn(open: Char, close: Char) =
         startsWith(open) && endsWith(close)
