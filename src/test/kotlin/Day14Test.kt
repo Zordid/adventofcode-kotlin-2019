@@ -1,4 +1,4 @@
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
@@ -95,7 +95,7 @@ internal class Day14Test {
         @Test
         fun `part 2`() {
             assertEquals(82892753, example3.part2())
-            assertEquals(5586022 , example4.part2())
+            assertEquals(5586022, example4.part2())
             assertEquals(460664, example5.part2())
         }
 

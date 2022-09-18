@@ -13,6 +13,7 @@ import util.PixelGameEngine
 import x
 import y
 import java.awt.Color
+import java.util.*
 import kotlin.math.ceil
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -104,16 +105,16 @@ class SCDebugger(
         fun logRWBlock(address: Int) =
             (address until min(address + 10, memory.size)).joinToString("") {
                 when {
-                    writeCount[it] ?: 0 > 0 && readCount[it] ?: 0 > 0 -> "w"
-                    writeCount[it] ?: 0 > 0 -> "!"
-                    readCount[it] ?: 0 > 0 -> "r"
+                    (writeCount[it] ?: 0) > 0 && (readCount[it] ?: 0) > 0 -> "w"
+                    (writeCount[it] ?: 0) > 0 -> "!"
+                    (readCount[it] ?: 0) > 0 -> "r"
                     else -> "."
                 }
             }
 
         fun logUsageBlock(address: Int) =
             (address until min(address + 10, memory.hwm)).joinToString("") {
-                val types = type[it] ?: emptyList<Type>()
+                val types = type[it] ?: emptyList()
                 val type = when {
                     types.size == 1 && types.first() == Type.OPCODE -> "o"
                     types.size == 1 && types.first() == Type.PARAMETER -> "p"
@@ -121,7 +122,7 @@ class SCDebugger(
                     types.size > 1 -> "M"
                     else -> "."
                 }
-                if (writeCount[it] ?: 0 > 0) type.toUpperCase() else type
+                if ((writeCount[it] ?: 0) > 0) type.uppercase(Locale.getDefault()) else type
             }
 
         fun dump() {
@@ -132,7 +133,7 @@ class SCDebugger(
             println("\nMEMORY WEAR")
             println(writeCount.entries.asSequence().sortedByDescending { it.value }
                 .take(10).takeWhile { (_, count) -> count > 0 }
-                .joinToString("\n") { (address, count) -> "[$address] x $count" });
+                .joinToString("\n") { (address, count) -> "[$address] x $count" })
         }
 
     }
@@ -141,17 +142,19 @@ class SCDebugger(
         var count: Int = 1
 
         override fun toString() =
-            "${instruction.name.padEnd(3, ' ')} ${parameters.mapIndexed { index, p ->
-                val prefix = if (instruction.argDefinition[index] == 'A')
-                    "->" else ""
-                val destAndMode = when (modes[index]) {
-                    '0' -> "[$p]"
-                    '1' -> "$p"
-                    '2' -> if (p >= 0) "[RB+$p]" else "[RB$p]"
-                    else -> "?$p?"
-                }
-                prefix + destAndMode
-            }.joinToString(" ")}"
+            "${instruction.name.padEnd(3, ' ')} ${
+                parameters.mapIndexed { index, p ->
+                    val prefix = if (instruction.argDefinition[index] == 'A')
+                        "->" else ""
+                    val destAndMode = when (modes[index]) {
+                        '0' -> "[$p]"
+                        '1' -> "$p"
+                        '2' -> if (p >= 0) "[RB+$p]" else "[RB$p]"
+                        else -> "?$p?"
+                    }
+                    prefix + destAndMode
+                }.joinToString(" ")
+            }"
     }
 
     val previousIp = mutableMapOf<(Long), MutableMap<(Long), (Long)>>()
@@ -205,7 +208,7 @@ class SCDebugger(
             val nextToPrint = if (idx < orderedIps.size - 1) orderedIps[idx + 1] else -1
             val origins = previousIp[ip]!!
             val destinations = nextIp[ip] ?: emptyMap<Int, Int>()
-            if (origins.size > 1 || origins[previous] ?: 0L == 0L) {
+            if (origins.size > 1 || (origins[previous] ?: 0L) == 0L) {
                 if (!origins.containsKey(previous))
                     println("\n===[${jumpstats(origins)}]===")
                 else
@@ -214,7 +217,7 @@ class SCDebugger(
             val exes = executionHistory[ip]!!
 
             println("%04d %s".format(ip, exes.report()))
-            if (destinations.size > 1 || destinations[nextToPrint] ?: 0 == 0) {
+            if (destinations.size > 1 || (destinations[nextToPrint] ?: 0) == 0) {
                 if (!destinations.containsKey(nextToPrint))
                     println("===")
                 else
@@ -240,7 +243,7 @@ class SCDebugger(
                 detectChanging.map { exe.parameters[it] }.toString()
             }
             return "%4sx %-25s with varying %s: %s".format(
-                sumBy { it.count },
+                sumOf { it.count },
                 first().toString(),
                 detectChanging.joinToString { "p${it + 1}" },
                 changingReport
@@ -302,7 +305,7 @@ class SCDebugger(
                     val color = type?.color ?: Color.DARK_GRAY
                     draw(x * cellDim + 2, y * cellDim + 2, color)
 
-                    if (memory.writeCount[address] ?: 0 > 0)
+                    if ((memory.writeCount[address] ?: 0) > 0)
                         drawRect(x * cellDim + 1, y * cellDim + 1, 3, 3, Color.ORANGE)
                 }
             }

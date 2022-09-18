@@ -54,12 +54,15 @@ class MinPriorityQueueImpl<T> : MinPriorityQueue<T> {
 
 }
 
-class PriorityQueue<T>(size: Int, val comparator: Comparator<T>? = null) : Collection<T> {
+class PriorityQueue<T>(size: Int, private val comparator: Comparator<T>? = null) : Collection<T> {
     public override var size: Int = 0
         private set
-    private var arr: Array<T?> = Array<Comparable<T>?>(size, { null }) as Array<T?>
 
-    public fun add(element: T) {
+    override fun isEmpty() = size == 0
+
+    private var arr = Array<Comparable<T>?>(size) { null } as Array<T?>
+
+    fun add(element: T) {
         if (size + 1 == arr.size) {
             resize()
         }
@@ -67,18 +70,18 @@ class PriorityQueue<T>(size: Int, val comparator: Comparator<T>? = null) : Colle
         swim(size)
     }
 
-    public fun peek(): T {
-        if (size == 0) throw NoSuchElementException()
+    fun peek(): T {
+        if (isEmpty()) throw NoSuchElementException()
         return arr[1]!!
     }
 
-    public fun poll(): T {
-        if (size == 0) throw NoSuchElementException()
+    fun poll(): T {
+        if (isEmpty()) throw NoSuchElementException()
         val res = peek()
         arr.exch(1, size--)
         sink(1)
         arr[size + 1] = null
-        if ((size > 0) && (size == (arr.size - 1) / 4)) {
+        if ((isNotEmpty()) && (size == (arr.size - 1) / 4)) {
             resize()
         }
         return res
@@ -94,12 +97,8 @@ class PriorityQueue<T>(size: Int, val comparator: Comparator<T>? = null) : Colle
 
     private fun resize() {
         val old = arr
-        arr = Array<Comparable<T>?>(size * 2, { null }) as Array<T?>
+        arr = Array<Comparable<T>?>(size * 2) { null } as Array<T?>
         System.arraycopy(old, 0, arr, 0, size + 1)
-    }
-
-    public override fun isEmpty(): Boolean {
-        return size == 0
     }
 
     override fun contains(element: T): Boolean {
@@ -122,15 +121,15 @@ class PriorityQueue<T>(size: Int, val comparator: Comparator<T>? = null) : Colle
 
     companion object {
         private fun <T> greater(arr: Array<T?>, i: Int, j: Int, comparator: Comparator<T>? = null): Boolean {
-            if (comparator != null) {
-                return comparator.compare(arr[i], arr[j]) > 0
+            return if (comparator != null) {
+                comparator.compare(arr[i], arr[j]) > 0
             } else {
                 val left = arr[i]!! as Comparable<T>
-                return left > arr[j]!!
+                left > arr[j]!!
             }
         }
 
-        public fun <T> sink(arr: Array<T?>, a: Int, size: Int, comparator: Comparator<T>? = null) {
+        fun <T> sink(arr: Array<T?>, a: Int, size: Int, comparator: Comparator<T>? = null) {
             var k = a
             while (2 * k <= size) {
                 var j = 2 * k
@@ -141,7 +140,7 @@ class PriorityQueue<T>(size: Int, val comparator: Comparator<T>? = null) : Colle
             }
         }
 
-        public fun <T> swim(arr: Array<T?>, size: Int, comparator: Comparator<T>? = null) {
+        fun <T> swim(arr: Array<T?>, size: Int, comparator: Comparator<T>? = null) {
             var n = size
             while (n > 1 && greater(arr, n / 2, n, comparator)) {
                 arr.exch(n, n / 2)

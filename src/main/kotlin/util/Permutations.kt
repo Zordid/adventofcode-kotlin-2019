@@ -79,7 +79,7 @@ class Permutations(N: Int) : IntCombinations(N) {
     }
 }
 
-fun <T> allPermutationsOf(elements: List<T>) = sequence<List<T>> {
+fun <T> allPermutationsOf(elements: List<T>) = sequence {
     for (configuration in Permutations(elements.size)) {
         yield(configuration.map { elements[it] })
     }

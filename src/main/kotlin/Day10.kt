@@ -20,7 +20,7 @@ class Day10(testData: List<String>? = null) : Day<List<Char>>(10, 2019, { s -> s
             visibleFromByAngleUnsorted(a).size
 
         fun visibleFrom(a: Point) =
-            visibleFromByAngleUnsorted(a).values.map { it.minBy { a manhattanDistanceTo it }!! }
+            visibleFromByAngleUnsorted(a).values.map { it.minBy { a manhattanDistanceTo it } }
 
         fun visibleFromByAngle(a: Point) =
             visibleFromByAngleUnsorted(a).mapValues { (_, v) -> v.sortedBy { a manhattanDistanceTo it } }
@@ -36,7 +36,7 @@ class Day10(testData: List<String>? = null) : Day<List<Char>>(10, 2019, { s -> s
             val visibleByAngleSorted = visibleFromByAngle(origin)
                 .entries.sortedBy { (k, _) -> k.toSortingAngle() }
 
-            val rotations = visibleByAngleSorted.maxBy { (_, v) -> v.size }!!.value.size
+            val rotations = visibleByAngleSorted.maxBy { (_, v) -> v.size }.value.size
             repeat(rotations) { r ->
                 visibleByAngleSorted.forEach { (_, v) ->
                     if (r in v.indices) yield(v[r])
@@ -49,7 +49,7 @@ class Day10(testData: List<String>? = null) : Day<List<Char>>(10, 2019, { s -> s
 
     }
 
-    fun bestStation() = with(field) { asteroids.maxBy { countVisibleFrom(it) }!! }
+    fun bestStation() = with(field) { asteroids.maxBy { countVisibleFrom(it) } }
 
     override fun part1() = field.countVisibleFrom(bestStation())
 

@@ -13,13 +13,13 @@ fun <N> Graph<N>.breadthFirstSearch(start: N, destPredicate: (N) -> Boolean): St
     breadthFirstSearch(start, ::neighborsOf, destPredicate)
 
 fun <N> Graph<N>.breadthFirstSearch(start: N, dest: N): Stack<N> =
-    breadthFirstSearch(start, ::neighborsOf, { it == dest })
+    breadthFirstSearch(start, ::neighborsOf) { it == dest }
 
 fun <N> Graph<N>.depthFirstSearch(start: N, destPredicate: (N) -> Boolean): Stack<N> =
     depthFirstSearch(start, ::neighborsOf, destPredicate)
 
 fun <N> Graph<N>.depthFirstSearch(start: N, dest: N): Stack<N> =
-    depthFirstSearch(start, ::neighborsOf, { it == dest })
+    depthFirstSearch(start, ::neighborsOf) { it == dest }
 
 fun <N> Graph<N>.completeAcyclicTraverse(start: N, safeMode: Boolean = true): Sequence<Set<N>> =
     SearchEngineWithNodes(::neighborsOf).completeAcyclicTraverse(start, safeMode)
@@ -27,11 +27,11 @@ fun <N> Graph<N>.completeAcyclicTraverse(start: N, safeMode: Boolean = true): Se
 fun <N> Graph<N>.completeBreadthFirstTraverse(start: N): Sequence<Set<N>> =
     SearchEngineWithNodes(::neighborsOf).completeBreadthFirstTraverse(start)
 
-fun <N> Graph<N>.AStarSearch(start: N, dest: N): Solution<N> =
+fun <N> Graph<N>.aStarSearch(start: N, dest: N): Solution<N> =
     AStar(::neighborsOf, ::cost, ::costEstimation).search(start, dest)
 
 fun <N> Graph<N>.dijkstraSearch(start: N, dest: N): Solution<N> =
-    Dijkstra(::neighborsOf, ::cost).search(start, { it == dest })
+    Dijkstra(::neighborsOf, ::cost).search(start) { it == dest }
 
 fun <N> Graph<N>.dijkstraSearch(start: N, destPredicate: (N) -> Boolean): Solution<N> =
     Dijkstra(::neighborsOf, ::cost).search(start, destPredicate)

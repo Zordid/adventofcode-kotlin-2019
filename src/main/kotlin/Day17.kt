@@ -29,7 +29,7 @@ class Day17(testData: List<String>? = null) : Day<String>(17, 2019, ::asStrings,
                         break
                     m.add(mutableListOf())
                 } else {
-                    m.last().add(n.toChar())
+                    m.last().add(n.toInt().toChar())
                 }
 //                val v = m.joinToString("\n") { it.joinToString("") }
 //                println(v)
@@ -47,7 +47,7 @@ class Day17(testData: List<String>? = null) : Day<String>(17, 2019, ::asStrings,
         suspend fun sendCommand(cmd: String) {
             require(cmd.length <= 20)
             for (c in cmd) {
-                inChannel.send(c.toLong())
+                inChannel.send(c.code.toLong())
                 print(c)
             }
             inChannel.send(10L)
@@ -55,7 +55,7 @@ class Day17(testData: List<String>? = null) : Day<String>(17, 2019, ::asStrings,
         }
 
         suspend fun output(v: Long) {
-            if (v < 126) print(v.toChar())
+            if (v < 126) print(v.toInt().toChar())
             last = v
         }
 
@@ -78,7 +78,7 @@ class Day17(testData: List<String>? = null) : Day<String>(17, 2019, ::asStrings,
         last
     }
 
-    override fun part1() = retrieveMap().findIntersections().map { (x, y) -> x * y }.sum()
+    override fun part1() = retrieveMap().findIntersections().sumOf { (x, y) -> x * y }
 
     override fun part2(): Long {
         findSolution(retrieveMap())
@@ -110,7 +110,8 @@ class Day17(testData: List<String>? = null) : Day<String>(17, 2019, ::asStrings,
 
     private fun Maze.findCorners() =
         area.allPoints().filter {
-            this[it] == SCAFFOLD && it.neighbors().count { this[it] == SCAFFOLD } == 2 && (this[it.left()] != this[it.right()])
+            this[it] == SCAFFOLD && it.neighbors()
+                .count { this[it] == SCAFFOLD } == 2 && (this[it.left()] != this[it.right()])
         }.toList()
 
     private fun Maze.find(c: Char) = area.allPoints().filter { this[it] == c }
@@ -180,7 +181,7 @@ class Day17(testData: List<String>? = null) : Day<String>(17, 2019, ::asStrings,
                 if (nextDirection == d.left) cmd.add("L") else cmd.add("R")
                 cmd.add((p manhattanDistanceTo nextPoint).toString())
                 Triple(nextPoint, nextDirection, cmd)
-            }.let { it.third.toList() }
+            }.third.toList()
 
         private fun shrinkToThree(commands: List<String>) {
             val pre = emptyList<String>()
@@ -218,7 +219,7 @@ class Day17(testData: List<String>? = null) : Day<String>(17, 2019, ::asStrings,
 
         private fun List<String>.fits() = commandLength() <= 20
 
-        private fun List<String>.commandLength() = sumBy { it.length } + size - 1
+        private fun List<String>.commandLength() = sumOf { it.length } + size - 1
 
         private fun List<String>.asCommand() = joinToString(",")
 

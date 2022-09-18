@@ -38,7 +38,14 @@ internal class Day10Test {
         val d = Day10(field)
         val v = d.field.visibleFromByAngle(3 to 3)
         v.entries.sortedBy { toAngle(it.key) }.forEach {
-            println("${it.key} => ${atan2(it.key.y.toDouble(), it.key.x.toDouble())} / ${toAngle(it.key)} = ${it.value}")
+            println(
+                "${it.key} => ${
+                    atan2(
+                        it.key.y.toDouble(),
+                        it.key.x.toDouble()
+                    )
+                } / ${toAngle(it.key)} = ${it.value}"
+            )
         }
     }
 

@@ -8,9 +8,9 @@ class NanoFactory(rawReactions: List<Reaction>) {
     private val elements = extractElements(rawReactions)
 
     private fun extractElements(rawReactions: List<Reaction>): List<String> {
-        val reactionDependencies = rawReactions.map {
+        val reactionDependencies = rawReactions.associate {
             it.result.second to it.need.map { it.second }
-        }.toMap()
+        }
         val allElements = reactionDependencies.keys + reactionDependencies.values.flatten()
 
         fun search(start: String, target: String): Boolean =

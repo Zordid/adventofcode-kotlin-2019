@@ -9,8 +9,8 @@ class Day03Game : PixelGameEngine() {
     val wire1 = day03.wirePoints[0]
     val wire2 = day03.wirePoints[1]
     val commonPoints = day03.commonPoints
-    val nearestOverlap = commonPoints.minBy(Point::manhattanDistance)!!
-    val earliestOverlap = commonPoints.minBy { wire1.indexOf(it) + wire2.indexOf(it) }!!
+    val nearestOverlap = commonPoints.minBy(Point::manhattanDistance)
+    val earliestOverlap = commonPoints.minBy { wire1.indexOf(it) + wire2.indexOf(it) }
 
     fun traceLines(wire: List<String>): List<Point> = wire.fold(mutableListOf(0 to 0)) { points, instruction ->
         val direction = instruction[0]

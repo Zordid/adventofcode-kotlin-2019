@@ -1,6 +1,7 @@
 package shipcomputer
 
 import IntcodeComputer
+import java.util.*
 import kotlin.random.Random
 
 val prog = """
@@ -102,10 +103,12 @@ class SCAssembler(code: String) {
                         result.add(evaluate(literal))
                     }
                 }
+
                 command.isWrappedIn('"', '"') -> {
-                    command.unwrap().forEach { result.add(it.toLong()) }
+                    command.unwrap().forEach { result.add(it.code.toLong()) }
                     result.add(0)
                 }
+
                 command.startsWith('#') -> {
                     val elements = command.split(Regex("\\s+"))
                     when (elements[0]) {
@@ -113,6 +116,7 @@ class SCAssembler(code: String) {
                             require(elements.size == 3) { "not enough parameters for define" }
                             markers[elements[1]] = elements[2].toInt()
                         }
+
                         "#NOISE" -> {
                             require(elements.size > 1) { "at least one parameter needed" }
                             val size = elements[1].toInt()
@@ -120,6 +124,7 @@ class SCAssembler(code: String) {
                                 result.add(Random.nextLong(100))
                             }
                         }
+
                         "#NOISE_ALIGN_TO" -> {
                             require(elements.size > 1) { "at least one parameter needed" }
                             val align = elements[1].toInt()
@@ -127,12 +132,14 @@ class SCAssembler(code: String) {
                                 result.add(Random.nextLong(100))
                             }
                         }
+
                         else -> error("Unknown directive $elements[0]")
                     }
                 }
+
                 command.isNotBlank() -> {
                     val elements = command.split(Regex("\\s+")).toMutableList()
-                    val mnemonic = elements.first().toUpperCase()
+                    val mnemonic = elements.first().uppercase(Locale.getDefault())
                     val parameters = elements.slice(1 until elements.size)
 
                     //println("$address $mnemonic $parameters")
@@ -164,11 +171,13 @@ class SCAssembler(code: String) {
                                 parameter = newParameter
                                 offset.toInt()
                             }
+
                             parameter.substring(1).contains('-') -> {
                                 val (newParameter, offset) = parameter.split("-")
                                 parameter = newParameter
                                 -offset.toInt()
                             }
+
                             else -> 0
                         }
                         result.add(evaluate(parameter) + offset)
@@ -199,7 +208,7 @@ class SCAssembler(code: String) {
 
     private fun evaluate(literal: String): Long {
         if (literal.isWrappedIn('\'', '\''))
-            return literal.unwrap()[0].toLong()
+            return literal.unwrap()[0].code.toLong()
         val value = literal.toLongOrNull() ?: markers[literal]?.toLong()
         if (value == null) {
             unresolvedMarkers.getOrPut(literal) { mutableListOf() }.add(result.size)

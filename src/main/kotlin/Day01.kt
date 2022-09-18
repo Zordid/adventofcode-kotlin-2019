@@ -10,8 +10,8 @@ class Day01 : Day<Int>(1, 2019, ::asInts) {
         return if (fuel == 0) 0 else fuel + fuelForMassRecursive(fuel)
     }
 
-    override fun part1() = moduleMasses.sumBy { fuelForMass(it) }
-    override fun part2() = moduleMasses.sumBy { fuelForMassRecursive(it) }
+    override fun part1() = moduleMasses.sumOf { fuelForMass(it) }
+    override fun part2() = moduleMasses.sumOf { fuelForMassRecursive(it) }
 
 }
 

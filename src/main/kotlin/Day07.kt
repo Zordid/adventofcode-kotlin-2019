@@ -42,7 +42,7 @@ class Day07(testData: List<String>? = null) : Day<String>(7, 2019, ::asStrings, 
             .maxBy { combination ->
                 //println("Now trying $combination")
                 runConnectedAmps(combination)
-            }!!
+            }
         return runConnectedAmps(bestPhaseSetting)
     }
 
@@ -51,7 +51,7 @@ class Day07(testData: List<String>? = null) : Day<String>(7, 2019, ::asStrings, 
             .maxBy { combination ->
                 //println("Now trying $combination")
                 runInFeedbackLoop(combination)
-            }!!
+            }
         return runInFeedbackLoop(bestPhaseSetting)
     }
 }

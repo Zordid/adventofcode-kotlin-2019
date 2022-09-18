@@ -92,11 +92,10 @@ fun byAsciiOutChannel(
 ): suspend (Long) -> Unit = { v: Long ->
     when (v) {
         10L -> channel.send(buffer.toString()).also { buffer.clear() }
-        in 11..126 -> buffer.append(v.toChar())
+        in 11..126 -> buffer.append(v.toInt().toChar())
         else -> channel.send("$v")
     }
 }
-
 
 
 class IntcodeComputer(

@@ -16,7 +16,7 @@ class Day18(testData: List<String>? = null) : Day<String>(18, 2019, ::asStrings,
         override fun neighborsOf(node: State) = node.pos.neighbors()
             .filter {
                 val c = map[it.y][it.x]
-                c == '.' || c == '@' || c in 'a'..'z' || (c in 'A'..'Z' && c.toLowerCase() in node.keys)
+                c == '.' || c == '@' || c in 'a'..'z' || (c in 'A'..'Z' && c.lowercaseChar() in node.keys)
             }.map {
                 val c = map[it.y][it.x]
                 State(it, if (c in 'a'..'z') node.keys + c else node.keys)
@@ -37,19 +37,20 @@ class Day18(testData: List<String>? = null) : Day<String>(18, 2019, ::asStrings,
             override fun neighborsOf(node: Point): Collection<Point> {
                 return node.neighbors().filter {
                     val c = map[it.y][it.x]
-                    c == '.' || c == '@' || c in 'a'..'z' || (c in 'A'..'Z' && c.toLowerCase() in keys)
+                    c == '.' || c == '@' || c in 'a'..'z' || (c in 'A'..'Z' && c.lowercaseChar() in keys)
                 }
             }
         }
+
         private val costCache = mutableMapOf<Pair<MState, MState>, Int>()
         private val keysWithDepthCache = Array(4) {
             mutableMapOf<State, Map<Char, Int>>()
         }
         private val relevantKeysFor = (0..3).map { seg ->
-            doorToQuadrant.filter { (door, idx) -> idx == seg }.map { it.key.toLowerCase() }.toSet()
+            doorToQuadrant.filterValues { idx -> idx == seg }.map { it.key.lowercaseChar() }.toSet()
         }
         private val keysIn = (0..3).map { seg ->
-            keyToQuadrant.filter { (key, idx) -> idx == seg }.map { it.key }.toSet()
+            keyToQuadrant.filterValues { idx -> idx == seg }.map { it.key }.toSet()
         }
         private val keyPos = allKeys.associateWith { map.findFirst(it)!! }
 
@@ -66,7 +67,7 @@ class Day18(testData: List<String>? = null) : Day<String>(18, 2019, ::asStrings,
                 }
                 .filter { it.second.isNotEmpty() }
                 .takeWhile { keysMissing.isNotEmpty() }
-                .onEach { keysMissing -= it.second }
+                .onEach { keysMissing -= it.second.toSet() }
                 .toList()
             val reachableKeys = layers.map { it.second }.flatten()
 
@@ -94,8 +95,8 @@ class Day18(testData: List<String>? = null) : Day<String>(18, 2019, ::asStrings,
             return r
         }
 
-        override fun cost(node1: MState, node2: MState): Int {
-            return costCache[node1 to node2]!!
+        override fun cost(from: MState, to: MState): Int {
+            return costCache[from to to]!!
         }
     }
 
@@ -115,7 +116,7 @@ class Day18(testData: List<String>? = null) : Day<String>(18, 2019, ::asStrings,
 
     fun <T> List<T>.change(idx: Int, v: T): List<T> = toMutableList().apply { this[idx] = v }
 
-    private val doorToQuadrant = allKeys.map { it.toUpperCase() }.associateWithQuadrant()
+    private val doorToQuadrant = allKeys.map { it.uppercaseChar() }.associateWithQuadrant()
     private val keyToQuadrant = allKeys.associateWithQuadrant()
 
     private fun Iterable<Char>.associateWithQuadrant() = associateWith { key ->
@@ -132,20 +133,23 @@ class Day18(testData: List<String>? = null) : Day<String>(18, 2019, ::asStrings,
     private fun mutateMapForPart2(map: List<List<Char>>): List<List<Char>> {
         val at = map.findFirst('@')!!
         return map.mapIndexed { y, row ->
-            if (y == at.y - 1 || y == at.y + 1) {
-                row.toMutableList().apply {
-                    this[at.x - 1] = '@'
-                    this[at.x] = '#'
-                    this[at.x + 1] = '@'
+            when (y) {
+                at.y - 1, at.y + 1 -> {
+                    row.toMutableList().apply {
+                        this[at.x - 1] = '@'
+                        this[at.x] = '#'
+                        this[at.x + 1] = '@'
+                    }
                 }
-            } else if (y == at.y) {
-                row.toMutableList().apply {
-                    this[at.x - 1] = '#'
-                    this[at.x] = '#'
-                    this[at.x + 1] = '#'
+                at.y -> {
+                    row.toMutableList().apply {
+                        this[at.x - 1] = '#'
+                        this[at.x] = '#'
+                        this[at.x + 1] = '#'
+                    }
                 }
-            } else
-                row
+                else -> row
+            }
         }
     }
 }

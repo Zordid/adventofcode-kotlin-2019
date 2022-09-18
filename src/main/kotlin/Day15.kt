@@ -1,15 +1,17 @@
 import Direction.*
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import util.AStarSearch
 import util.Graph
+import util.aStarSearch
 import util.buildStack
 import util.completeAcyclicTraverse
 
 enum class AreaType { WALL, FLOOR }
 
+@OptIn(DelicateCoroutinesApi::class)
 class RobotControl(program: IntcodeProgram) {
 
     private val inChannel = Channel<Long>(1)
@@ -110,7 +112,7 @@ class RobotControl(program: IntcodeProgram) {
 
     private suspend fun safeDriveTo(p: Point) {
         if (p == currentPosition) return
-        val path = knownGraph.AStarSearch(currentPosition, p).buildStack()
+        val path = knownGraph.aStarSearch(currentPosition, p).buildStack()
         path.forEach { newPos ->
             require(
                 when (newPos) {
@@ -132,11 +134,12 @@ class Day15(testData: String? = null) : Day<String>(15, 2019, ::asStrings, testD
 
     val robot = RobotControl(input.asIntcode())
 
+    @OptIn(DelicateCoroutinesApi::class)
     suspend fun part1Async(): Int {
         val explorer = GlobalScope.launch { explore() }
         explorer.join()
         robot.printStatus()
-        val solution = robot.unknownGraph.AStarSearch(robot.targetPosition!!, origin).buildStack()
+        val solution = robot.unknownGraph.aStarSearch(robot.targetPosition!!, origin).buildStack()
         return solution.size - 1
     }
 
@@ -153,9 +156,9 @@ class Day15(testData: String? = null) : Day<String>(15, 2019, ::asStrings, testD
             with(robot) {
                 if (walk(direction.left)) direction = direction.left else {
                     if (!walk(direction)) {
-                        if (walk(direction.right)) direction = direction.right else {
+                        direction = if (walk(direction.right)) direction.right else {
                             walk(direction.opposite)
-                            direction = direction.opposite
+                            direction.opposite
                         }
                     }
                 }

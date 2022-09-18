@@ -59,6 +59,7 @@ class Day22(testData: List<String>? = null, val deckSize: Long = 10_007) :
                         predecessorDeck,
                         s.split(" ").last().toInt()
                     )
+
                     s.startsWith("cut") -> Cut(predecessorDeck, s.split(" ").last().toInt())
                     else -> error(s)
                 }
@@ -67,7 +68,7 @@ class Day22(testData: List<String>? = null, val deckSize: Long = 10_007) :
     }
 
 
-    override fun part1(): Any? {
+    override fun part1(): Any {
         val result = input.fold<String, CardDeck>(CardDeck.FactoryDeck(deckSize)) { acc, s -> CardDeck.parse(s, acc) }
         if (deckSize <= 10)
             return result
@@ -90,7 +91,7 @@ class Day22(testData: List<String>? = null, val deckSize: Long = 10_007) :
 
 
         var cardAt2020 = 2020L
-        var shuffled = result[cardAt2020]
+        val shuffled = result[cardAt2020]
         println("Result: $shuffled")
 
         val calc = (r.first * 2020.toBigInteger() + r.second).mod(result.size.toBigInteger()).toLong()

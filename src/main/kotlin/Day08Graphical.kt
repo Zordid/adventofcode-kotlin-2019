@@ -1,7 +1,7 @@
 import util.PixelGameEngine
 import java.awt.Color
 
-class SIFVisualizer(val image: String) : PixelGameEngine() {
+class SIFVisualizer(image: String) : PixelGameEngine() {
 
     val layers = Day08(listOf(image)).layers.reversed()
 
@@ -19,8 +19,7 @@ class SIFVisualizer(val image: String) : PixelGameEngine() {
         if (layer in layers.indices)
             for (y in 0 until height) {
                 for (x in 0 until width) {
-                    val color = layers[layer][y * width + x]
-                    when (color) {
+                    when (layers[layer][y * width + x]) {
                         '0' -> draw(x, y, Color.BLACK)
                         '1' -> draw(x, y, Color.WHITE)
                     }

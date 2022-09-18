@@ -2,14 +2,14 @@ import util.PixelGameEngine
 import java.awt.Color
 import kotlin.math.abs
 
-class Day10Graphical(val day10: Day10) : PixelGameEngine() {
+class Day10Graphical(day10: Day10) : PixelGameEngine() {
 
     val field = day10.field
     val asteroids = field.asteroids
 
     val best = day10.bestStation()
     val visibleByBest = day10.field.visibleFrom(best)
-    val notVisibleByBest = asteroids - visibleByBest - best
+    val notVisibleByBest = asteroids - visibleByBest.toSet() - best
     val visibleByAngle = day10.field.visibleFromByAngle(best)
 
     val fps = 30

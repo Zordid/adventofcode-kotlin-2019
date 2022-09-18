@@ -1,5 +1,5 @@
-import util.AStarSearch
 import util.Graph
+import util.aStarSearch
 import util.breadthFirstSearch
 import util.buildStack
 import kotlin.math.absoluteValue
@@ -75,8 +75,10 @@ class Day20(testData: List<String>? = null) : Day<String>(20, 2019, ::asStrings,
                     when {
                         innerPortalName != null ->
                             RecursivePosition(node.level + 1, outerPortalToPoint[innerPortalName]!!)
+
                         outerPortalName != null && node.level > 0 ->
                             RecursivePosition(node.level - 1, innerPortalToPoint[outerPortalName]!!)
+
                         else -> null
                     }
                 return if (portalNeighbor != null) directNeighbors + portalNeighbor else directNeighbors
@@ -91,7 +93,7 @@ class Day20(testData: List<String>? = null) : Day<String>(20, 2019, ::asStrings,
         val start = RecursivePosition(0, start)
         val end = RecursivePosition(0, end)
 
-        val solution = graph.AStarSearch(start, end).buildStack()
+        val solution = graph.aStarSearch(start, end).buildStack()
         return solution.size - 1
     }
 

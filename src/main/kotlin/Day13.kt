@@ -59,6 +59,7 @@ class Day13(testData: List<String>? = null) : Day<String>(13, 2019, ::asStrings,
                             ball = x to y
                             redraw = true
                         }
+
                         3 -> {
                             pedal = x to y
                             redraw = true

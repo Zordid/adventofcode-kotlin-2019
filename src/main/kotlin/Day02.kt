@@ -5,7 +5,7 @@ class Day02 : Day<String>(2, 2019, ::asStrings) {
     override fun part1(): Long {
         val computer = IntcodeComputer(program)
         computer.reset {
-            set(1, listOf<Long>(12, 2))
+            set(1, listOf(12, 2))
         }
 
         computer.run()

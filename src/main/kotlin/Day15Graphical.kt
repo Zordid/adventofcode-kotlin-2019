@@ -1,8 +1,5 @@
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import util.PixelGameEngine
 import util.completeAcyclicTraverse
 import java.awt.Color
@@ -16,6 +13,7 @@ class Day15Graphical : PixelGameEngine() {
 
     lateinit var p1Job: Job
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
         clear(Color.DARK_GRAY)
         p1Job = GlobalScope.launch {
@@ -31,7 +29,7 @@ class Day15Graphical : PixelGameEngine() {
     override fun onUpdate(elapsedTime: Long) {
         if (p1Job.isActive) {
             showMap()
-            runBlocking { debugChannel.offer(true) }
+            runBlocking { debugChannel.trySend(true).isSuccess }
             sleep(5)
         } else {
             if (levels == null) {

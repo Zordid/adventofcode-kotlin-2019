@@ -1,7 +1,7 @@
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-internal class Day18Test{
+internal class Day18Test {
 
     @Test
     fun `part 1`() {

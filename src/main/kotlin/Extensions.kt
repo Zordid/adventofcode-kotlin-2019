@@ -63,6 +63,7 @@ infix operator fun Point.times(factor: Int) = when (factor) {
     1 -> this
     else -> x * factor to y * factor
 }
+
 infix operator fun Point.div(factor: Int) = when (factor) {
     1 -> this
     else -> x / factor to y / factor
@@ -92,10 +93,10 @@ val Area.height: Int
     get() = (second.y - first.y).absoluteValue + 1
 
 fun Iterable<Point>.boundingBox(): Pair<Point, Point> {
-    val minX = minBy { it.x }?.x!!
-    val maxX = maxBy { it.x }?.x!!
-    val minY = minBy { it.y }?.y!!
-    val maxY = maxBy { it.y }?.y!!
+    val minX = minBy { it.x }.x
+    val maxX = maxBy { it.x }.x
+    val minY = minBy { it.y }.y
+    val maxY = maxBy { it.y }.y
     return (minX to minY) to (maxX to maxY)
 }
 

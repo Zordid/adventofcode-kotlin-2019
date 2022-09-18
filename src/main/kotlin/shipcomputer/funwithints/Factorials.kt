@@ -1,4 +1,4 @@
-//package shipcomputer.funwithints
+package shipcomputer.funwithints
 //
 //import shipcomputer.compile
 //import shipcomputer.debugGraphical

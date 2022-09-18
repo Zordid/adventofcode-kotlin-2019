@@ -73,7 +73,7 @@ class Day21(testData: List<String>? = null) : Day<String>(21, 2019, ::asStrings,
     }
 
     private suspend fun Channel<Long>.write(s: String) {
-        s.forEach { send(it.toLong()) }
+        s.forEach { send(it.code.toLong()) }
         send(10L)
     }
 

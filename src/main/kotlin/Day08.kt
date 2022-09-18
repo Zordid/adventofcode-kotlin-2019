@@ -14,7 +14,7 @@ class Day08(
         .chunked(width * height).map { it.toList() }.toList()
 
     override fun part1(): Int {
-        val layerWithFewestZeros = layers.minBy { it.count { it == '0' } }!!
+        val layerWithFewestZeros = layers.minBy { it.count { it == '0' } }
         val onesInLayer = layerWithFewestZeros.count { it == '1' }
         val twosInLayer = layerWithFewestZeros.count { it == '2' }
         return onesInLayer * twosInLayer

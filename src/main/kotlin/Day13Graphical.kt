@@ -45,6 +45,7 @@ class Arcade : PixelGameEngine() {
             when {
                 next.startsWith("joystick") -> {
                 }
+
                 next.startsWith("score") -> appName = next
                 else -> {
                     val (x, y, t) = next.split(", ").map { it.toInt() }

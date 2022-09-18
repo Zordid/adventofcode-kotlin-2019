@@ -37,7 +37,7 @@ class Day12(testData: List<String>? = null) : Day<Vector3D>(12, 2019, ::stringTo
         moonsInTime.forEach { (pos, vel) ->
             println("pos= $pos, vel= $vel ... energy: ${(pos to vel).energy()}")
         }
-        println("Total energy: ${moonsInTime.sumBy { it.energy() }}")
+        println("Total energy: ${moonsInTime.sumOf { it.energy() }}")
     }
 
     fun step() {
@@ -68,10 +68,10 @@ class Day12(testData: List<String>? = null) : Day<Vector3D>(12, 2019, ::stringTo
         repeat(1000) {
             step()
         }
-        return moonsInTime.sumBy { it.energy() }
+        return moonsInTime.sumOf { it.energy() }
     }
 
-    override fun part2(): Any? {
+    override fun part2(): Any {
         val cX = constellation.map { it.first.x }
         val sX = simulate(cX)
         val cY = constellation.map { it.first.y }
