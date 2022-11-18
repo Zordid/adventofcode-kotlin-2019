@@ -1,4 +1,4 @@
-@file:Suppress("unused")
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
 
 package util
 
@@ -75,14 +75,15 @@ abstract class PixelGameEngine {
     }
 
     private var appName = ""
+    var appInfo: Any = ""
+
     var limitFps: Int = Int.MAX_VALUE
         set(value) {
             field = value
             millisPerFrame = (1000.0 / value).toLong()
         }
     private var millisPerFrame: Long = 0
-    var appInfo: Any = ""
-    lateinit var frame: JFrame
+    private lateinit var frame: JFrame
     var screenWidth = 0
         private set
     var screenHeight = 0
@@ -112,7 +113,7 @@ abstract class PixelGameEngine {
         screenWidth: Int,
         screenHeight: Int,
         pixelWidth: Int = 1,
-        pixelHeight: Int = 1,
+        pixelHeight: Int = pixelWidth,
         appName: String = "PixelGameEngine",
     ) {
         require(screenWidth > 0 && screenHeight > 0) { "Unsupported dimensions: $screenWidth x $screenHeight" }
