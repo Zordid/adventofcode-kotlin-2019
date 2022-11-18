@@ -31,6 +31,7 @@ class Day03Game : PixelGameEngine() {
     val scale = 15
 
     override fun onCreate() {
+        construct(1000, 1000, 1, 1, "AoC 2019 Day 3: Crossed Wires")
         day03.run()
         midpoint = screenWidth / 2 to screenHeight / 2
 
@@ -65,8 +66,5 @@ class Day03Game : PixelGameEngine() {
 }
 
 fun main() {
-    with(Day03Game()) {
-        construct(1000, 1000, 1, 1, "AoC 2019 Day 3: Crossed Wires")
-        start()
-    }
+    Day03Game().start()
 }

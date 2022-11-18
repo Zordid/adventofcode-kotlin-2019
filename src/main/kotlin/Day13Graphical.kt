@@ -14,6 +14,7 @@ class Arcade : PixelGameEngine() {
     private lateinit var gamePlay: Iterator<String>
 
     override fun onCreate() {
+        construct(44, 25, 16, 16, "AoC 2019 Day 13 Arcade")
         recorder.takeWhile { !it.startsWith("joystick") }.forEach {
             if (it.startsWith("score")) {
                 appInfo = it
@@ -40,7 +41,9 @@ class Arcade : PixelGameEngine() {
     }
 
     override fun onUpdate(elapsedTime: Long, frame: Long) {
-        if (gamePlay.hasNext()) {
+        if (!gamePlay.hasNext()) stop()
+        if (frame > 100) limitFps=1000
+        while (gamePlay.hasNext()) {
             val next = gamePlay.next()
             when {
                 next.startsWith("joystick") -> {
@@ -50,7 +53,7 @@ class Arcade : PixelGameEngine() {
                 else -> {
                     val (x, y, t) = next.split(", ").map { it.toInt() }
                     visualize(x, y, t)
-                    sleep(1000 / 40)
+                    return
                 }
             }
         }
@@ -60,8 +63,5 @@ class Arcade : PixelGameEngine() {
 
 @ExperimentalCoroutinesApi
 fun main() {
-    with(Arcade()) {
-        construct(44, 25, 16, 16)
-        start()
-    }
+    Arcade().start()
 }

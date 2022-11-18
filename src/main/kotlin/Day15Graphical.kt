@@ -15,9 +15,10 @@ class Day15Graphical : PixelGameEngine() {
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
+        construct(50, 50, 8, 8, "AoC 2019 Day 15")
         clear(Color.DARK_GRAY)
         p1Job = GlobalScope.launch {
-            sleep(1500)
+            delay(1500)
             day15.part1Async()
             day15.part2()
         }
@@ -30,24 +31,22 @@ class Day15Graphical : PixelGameEngine() {
         if (p1Job.isActive) {
             showMap()
             runBlocking { debugChannel.trySend(true).isSuccess }
-            sleep(5)
         } else {
             if (levels == null) {
                 showMap()
-                appInfo = "done searching target"
+                appInfo = "target found"
                 levels = day15.robot.knownGraph.completeAcyclicTraverse(day15.robot.targetPosition!!).toList()
                 println("Now flooding with oxygen in ${levels?.size} levels!")
             }
             levels?.let {
                 if (onLevel <= it.lastIndex)
-                    showOxygen(onLevel, it[onLevel])
+                    showOxygen(it[onLevel])
                 onLevel++
             }
-            sleep(25)
         }
     }
 
-    private fun showOxygen(level: Int, oxygen: Set<Point>) {
+    private fun showOxygen(oxygen: Set<Point>) {
         oxygen.forEach {
             val p = it - offset
             with(p) {
@@ -81,12 +80,8 @@ class Day15Graphical : PixelGameEngine() {
         }
     }
 
-
 }
 
 fun main() {
-    with(Day15Graphical()) {
-        construct(50, 50, 8, 8)
-        start()
-    }
+    Day15Graphical().start()
 }

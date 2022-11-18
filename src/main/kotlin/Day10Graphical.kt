@@ -2,7 +2,7 @@ import util.PixelGameEngine
 import java.awt.Color
 import kotlin.math.abs
 
-class Day10Graphical(day10: Day10) : PixelGameEngine() {
+class Day10Graphical(val day10: Day10 = Day10()) : PixelGameEngine() {
 
     val field = day10.field
     val asteroids = field.asteroids
@@ -13,7 +13,6 @@ class Day10Graphical(day10: Day10) : PixelGameEngine() {
     val visibleByAngle = day10.field.visibleFromByAngle(best)
 
     val fps = 30
-    val sleep = 1000L / fps
 
     val Int.seconds: Int
         get() = fps * this
@@ -37,15 +36,15 @@ class Day10Graphical(day10: Day10) : PixelGameEngine() {
     var currentlyDestroying: Point? = null
     var destroyCount = 0
     var solutionPart2: Point? = null
-    var visible = field.visibleFrom(best)
 
     fun drawAsteroid(p: Point, color: Color) {
         draw(p.x * 3 + 1, p.y * 3 + 1, color)
     }
 
-    val middleGray = Color(128, 128, 128)
+    private val middleGray = Color(128, 128, 128)
 
     override fun onCreate() {
+        construct(day10.field.dimX * 3, day10.field.dimY * 3, 6, 6, "AoC 2019 Day 10")
         asteroids.forEach { drawAsteroid(it, middleGray) }
         //drawAsteroid(best, Color.GREEN)
     }
@@ -79,26 +78,21 @@ class Day10Graphical(day10: Day10) : PixelGameEngine() {
             }
             if (hitIterator.hasNext()) {
                 destroyCount++
+                appInfo = "destroyed: $destroyCount"
                 currentlyDestroying = hitIterator.next()
                 currentlyDestroying?.apply {
                     drawAsteroid(this, Color.RED)
                 }
             } else {
                 currentlyDestroying = null
+                stop()
             }
         }
         cycle++
-        sleep(sleep)
     }
-
 
 }
 
 fun main() {
-    val day10 = Day10()
-
-    with(Day10Graphical(day10)) {
-        construct(day10.field.dimX * 3, day10.field.dimY * 3, 6, 6)
-        start()
-    }
+    Day10Graphical().start()
 }
