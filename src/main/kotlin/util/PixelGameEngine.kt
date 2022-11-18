@@ -27,7 +27,7 @@ import kotlin.system.measureTimeMillis
  *
  * Version history:
  * V2.0 - 17/11/2022 improve repainting only the dirty area
- * V2.1 - 18/11/2022 add triangle functions, add frame sequence builder
+ * V2.1 - 18/11/2022 add triangle functions, add frame sequence builder, fixed refresh
  *
  */
 abstract class PixelGameEngine {
@@ -47,7 +47,7 @@ abstract class PixelGameEngine {
             var y = g.clipBounds.y / pixelHeight
             val startX = g.clipBounds.x / pixelWidth
             val endY =
-                ((g.clipBounds.y + g.clipBounds.height) / pixelHeight).coerceAtMost(screenWidth)
+                ((g.clipBounds.y + g.clipBounds.height) / pixelHeight).coerceAtMost(screenHeight)
             val endX =
                 ((g.clipBounds.x + g.clipBounds.width) / pixelWidth).coerceAtMost(screenWidth)
             //println(g.clipBounds)
